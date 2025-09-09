@@ -50,3 +50,4 @@
 *.log
 *.jlink
 *.launch
+*.mk
