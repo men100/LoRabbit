@@ -53,3 +53,4 @@
 *.mk
 *.makefile
 *.init
+compile_commands.json
