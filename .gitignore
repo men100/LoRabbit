@@ -52,3 +52,4 @@
 *.launch
 *.mk
 *.makefile
+*.init
