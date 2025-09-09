@@ -41,16 +41,17 @@
 *.dwo
 
 # e2 studio related files
-.secure_azone
 *.elf
+*.in
+*.init
+*.jlink
+*.launch
+*.log
 *.map
+*.mk
 *.prefs
 *.sbd
 *.srec
-*.log
-*.jlink
-*.launch
-*.mk
-*.init
+.secure_azone
 makefile
 compile_commands.json
