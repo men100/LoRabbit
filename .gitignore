@@ -39,3 +39,12 @@
 
 # debug information files
 *.dwo
+
+# e2 studio related files
+.secure_azone
+*.elf
+*.map
+*.prefs
+*.sbd
+*.srec
+*.log
