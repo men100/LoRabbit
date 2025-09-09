@@ -48,3 +48,5 @@
 *.sbd
 *.srec
 *.log
+*.jlink
+*.launch
