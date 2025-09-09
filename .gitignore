@@ -51,6 +51,6 @@
 *.jlink
 *.launch
 *.mk
-*.makefile
 *.init
+makefile
 compile_commands.json
