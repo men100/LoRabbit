@@ -50,6 +50,7 @@
 *.map
 *.mk
 *.prefs
+*.rpd
 *.sbd
 *.srec
 .secure_azone
