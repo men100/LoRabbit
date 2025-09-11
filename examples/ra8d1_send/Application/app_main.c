@@ -6,6 +6,14 @@
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart2;
 
+// アプリケーションでLoRaハンドルの実体を定義
+static LoraHandle_t s_lora_handle;
+
+void g_uart2_callback(uart_callback_args_t *p_args) {
+    // ライブラリ提供のハンドラを呼び出し、処理を委譲する
+    LoRa_UartCallbackHandler(&s_lora_handle, p_args);
+}
+
 // LoRa設定値
 LoRaConfigItem_t s_config = {
     .own_address              = 0x0000,  // own_address 0
@@ -67,12 +75,12 @@ LOCAL void task_2(INT stacd, void *exinf)
 
 	    // 通常モードに移行して送信開始
 	    tm_putstring((UB*)"Switching to Normal Mode.\n");
-	    LoRa_SwitchToNormalMode();
+	    LoRa_SwitchToNormalMode(&s_lora_handle);
 
 	    uint8_t send_buffer[50];
         int len = snprintf((char*)send_buffer, sizeof(send_buffer), "EK-RA8D1 Packet #%d", counter++);
         tm_printf((UB*)"Sending: %s\n", send_buffer);
-        int result = LoRa_SendFrame(&s_config, send_buffer, len);
+        int result = LoRa_SendFrame(&s_lora_handle, &s_config, send_buffer, len);
         if (result != 0) {
             tm_printf((UB*)"LoRa_SendFrame failed with code: %d\n", result);
             return;
@@ -91,13 +99,20 @@ EXPORT INT usermain(void)
 	out_h(PORT_PODR(4), in_h(PORT_PODR(4))&~(1<<14));   // GREEN
 	out_h(PORT_PODR(1), in_h(PORT_PODR(1))&~(1<<7));    // RED
 
-	tm_putstring((UB*)"LoRa test\n");
+	tm_putstring((UB*)"LoRa send test\n");
+
+	// ハードウェア構成を定義
+    LoraHwConfig_t lora_hw_config = {
+        .p_uart = &g_uart2,     // FSPで生成されたUARTインスタンス
+        .m0     = PMOD2_9_GPIO, // FSPで定義したM0ピン
+        .m1     = PMOD2_10_GPIO // FSPで定義したM1ピン
+    };
 
 	// LoRaライブラリを初期化
-	LoRa_Init(&g_uart2);
+    LoRa_Init(&s_lora_handle, &lora_hw_config);
 
 	// LoRaモジュールを初期化
-    if (LoRa_InitModule(&s_config) != 0) {
+    if (LoRa_InitModule(&s_lora_handle, &s_config) != 0) {
         tm_putstring((UB*)"LoRa Init Failed!\n");
         R_IOPORT_PinWrite(&g_ioport_ctrl, PMOD2_9_GPIO, BSP_IO_LEVEL_LOW);
         while(1);

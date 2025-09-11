@@ -3,6 +3,24 @@
 #include "hal_data.h"
 #include <stdint.h>
 
+// ハードウェア構成を定義する構造体
+typedef struct {
+    uart_instance_t const * p_uart; // UART
+    bsp_io_port_pin_t       m0;     // M0
+    bsp_io_port_pin_t       m1;     // M1
+} LoraHwConfig_t;
+
+// LoRaハンドルの本体（すべての状態を保持）
+#define LORA_RX_BUFFER_SIZE 256
+typedef struct {
+    LoraHwConfig_t hw_config; // ハードウェア構成
+
+    // インスタンスごとの受信リングバッファ
+    volatile uint8_t rx_buffer[LORA_RX_BUFFER_SIZE];
+    volatile uint16_t rx_head;
+    volatile uint16_t rx_tail;
+} LoraHandle_t;
+
 // E220-900T22S(JP)の設定項目
 typedef struct {
   uint16_t own_address;
@@ -30,44 +48,50 @@ typedef struct {
 } RecvFrameE220900T22SJP_t;
 
 /**
- * @brief LoRaライブラリを初期化する
- * @param p_uart_instance 使用するUARTのインスタンス
+ * @brief LoRaハンドルを初期化する
+ * @param p_handle 初期化対象のハンドル
+ * @param p_hw_config 使用するハードウェアの構成
+ * @return 0:成功, -1:失敗
  */
-void LoRa_Init(uart_instance_t const * p_uart_instance);
+int LoRa_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config);
 
 /**
- * @brief E220-900T22S(JP)へLoRa初期設定を行う
- * @param config LoRa設定値
+ * @brief LoRaモジュールの設定を行う
+ * @param p_handle 操作対象のハンドル
+ * @param p_config LoRa設定値
  * @return 0:成功, 1:失敗, -1:未初期化
  */
-int LoRa_InitModule(LoRaConfigItem_t *config);
+int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config);
 
 /**
  * @brief LoRa受信を行う
  * @param recv_frame LoRa受信データの格納先
  * @return 0:成功, 1:失敗
  */
-int LoRa_ReceiveFrame(RecvFrameE220900T22SJP_t *recv_frame);
+int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame);
 
 /**
  * @brief LoRa送信を行う
+ * @param p_handle 操作対象のハンドル
  * @param config LoRa設定値
  * @param send_data 送信データ
  * @param size 送信データサイズ
  * @return 0:成功, 1:失敗
  */
-int LoRa_SendFrame(LoRaConfigItem_t *config, uint8_t *send_data, int size);
+int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *p_send_data, int size);
 
 /**
  * @brief 各種動作モードへ移行する関数群
  */
-void LoRa_SwitchToNormalMode(void);
-void LoRa_SwitchToWORSendingMode(void);
-void LoRa_SwitchToWORReceivingMode(void);
-void LoRa_SwitchToConfigurationMode(void);
+void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle);
+void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle);
+void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle);
+void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle);
 
 /**
- * @brief UARTの割り込みコールバック関数
- * @note FSPコンフィギュレータで設定した名前と一致させる必要があります
+ * @brief UART割り込み時に呼び出すべきハンドラ関数
+ * @note ユーザーはFSPのコールバック関数の中からこの関数を呼び出す
+ * @param p_handle 該当するLoRaハンドル
+ * @param p_args FSPコールバックから渡される引数
  */
-void lora_uart_callback(uart_callback_args_t *p_args);
+void LoRa_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_args);
