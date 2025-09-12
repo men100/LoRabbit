@@ -15,8 +15,8 @@ void hal_entry(void)
 {
     fsp_err_t err = FSP_SUCCESS;
 
-    // LoRa用UARTモジュールを初期化 (R_SCI_B_UART_OpenはFSPが自動生成したhal_entryで呼ばれる)
-    err = R_SCI_B_UART_Open(g_uart2.p_ctrl, g_uart2.p_cfg);
+    // LoRa用UARTモジュールを初期化
+    err = g_uart2.p_api->open(g_uart2.p_ctrl, g_uart2.p_cfg);
     if (FSP_SUCCESS != err) {
         R_IOPORT_PinWrite(&g_ioport_ctrl, USER_LED3_RED, BSP_IO_LEVEL_HIGH);
         while(1);

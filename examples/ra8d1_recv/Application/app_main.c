@@ -108,7 +108,7 @@ EXPORT INT usermain(void)
     // LoRaモジュールを初期化
     if (LoRa_InitModule(&s_lora_handle, &s_config) != 0) {
         tm_putstring((UB*)"LoRa Init Failed!\n");
-        R_IOPORT_PinWrite(&g_ioport_ctrl, PMOD2_9_GPIO, BSP_IO_LEVEL_LOW);
+        R_IOPORT_PinWrite(&g_ioport_ctrl, USER_LED3_RED, BSP_IO_LEVEL_HIGH);
         while(1);
     }
     tm_putstring((UB*)"LoRa Init Success!\n");

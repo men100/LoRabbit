@@ -80,7 +80,7 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
     }
     LORA_PRINTF((UB*)"\n");
 
-    R_SCI_B_UART_Write(p_uart->p_ctrl, command, sizeof(command));
+    p_uart->p_api->write(p_uart->p_ctrl, command, sizeof(command));
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 
     while (lora_available(p_handle) && response_len < sizeof(response)) {
@@ -158,7 +158,7 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
       LORA_PRINTF((UB*)"\n");
 #endif
 
-    R_SCI_B_UART_Write(p_uart->p_ctrl, frame, frame_size);
+    p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
     
     // 送信後にモジュールから応答データが返る場合があるため、バッファをクリア
