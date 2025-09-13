@@ -4,7 +4,7 @@
 #include <tm/tmonitor.h>
 
 // デバッグ出力用マクロ
-#define LORA_PRINTF(...) tm_printf(__VA_ARGS__)
+#define LORA_PRINTF(...) tm_printf((UB*)__VA_ARGS__)
 
 void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_args) {
     if (UART_EVENT_RX_CHAR == p_args->event) {
@@ -55,7 +55,7 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
 
     int ret = 0;
 
-    LORA_PRINTF((UB*)"switch to configuration mode\n");
+    LORA_PRINTF("switch to configuration mode\n");
     LoRa_SwitchToConfigurationMode(p_handle);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 
@@ -74,11 +74,11 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
     command[9] = p_config->encryption_key >> 8;
     command[10] = p_config->encryption_key & 0xff;
 
-    LORA_PRINTF((UB*)"# Command Request\n");
+    LORA_PRINTF("# Command Request\n");
     for (size_t i = 0; i < sizeof(command); i++) {
-        LORA_PRINTF((UB*)"0x%02x ", command[i]);
+        LORA_PRINTF("0x%02x ", command[i]);
     }
-    LORA_PRINTF((UB*)"\n");
+    LORA_PRINTF("\n");
 
     p_uart->p_api->write(p_uart->p_ctrl, command, sizeof(command));
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
@@ -87,11 +87,11 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
         response[response_len++] = lora_read(p_handle);
     }
 
-    LORA_PRINTF((UB*)"# Command Response\n");
+    LORA_PRINTF("# Command Response\n");
     for (size_t i = 0; i < response_len; i++) {
-        LORA_PRINTF((UB*)"0x%02x ", response[i]);
+        LORA_PRINTF("0x%02x ", response[i]);
     }
-    LORA_PRINTF((UB*)"\n");
+    LORA_PRINTF("\n");
 
     if (response_len != sizeof(command)) {
         ret = 1;
@@ -136,7 +136,7 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
         case 0b11: subpacket_size = 32; break;
     }
     if (size > subpacket_size) {
-        LORA_PRINTF((UB*)"send data length too long\n");
+        LORA_PRINTF("send data length too long\n");
         return 1;
     }
 
@@ -150,12 +150,12 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
 #if 1 /* print debug */
       for (int i = 0; i < 3 + size; i++) {
         if (i < 3) {
-          LORA_PRINTF((UB*)"%02x", frame[i]);
+          LORA_PRINTF("%02x", frame[i]);
         } else {
-            LORA_PRINTF((UB*)"%c", frame[i]);
+            LORA_PRINTF("%c", frame[i]);
         }
       }
-      LORA_PRINTF((UB*)"\n");
+      LORA_PRINTF("\n");
 #endif
 
     p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
