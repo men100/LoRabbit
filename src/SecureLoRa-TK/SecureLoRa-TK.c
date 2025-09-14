@@ -17,11 +17,17 @@ void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_
     }
 }
 
-static int lora_available(LoraHandle_t * p_handle) {
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args) {
+    tk_sig_sem(p_handle->tx_done_sem_id, 1);
+}
+#endif
+
+static int lora_available(LoraHandle_t *p_handle) {
     return (p_handle->rx_head - p_handle->rx_tail + LORA_RX_BUFFER_SIZE) % LORA_RX_BUFFER_SIZE;
 }
 
-static int lora_read(LoraHandle_t * p_handle) {
+static int lora_read(LoraHandle_t *p_handle) {
     if (p_handle->rx_head == p_handle->rx_tail) {
         return -1;
     }
@@ -30,6 +36,27 @@ static int lora_read(LoraHandle_t * p_handle) {
     p_handle->rx_tail = (p_handle->rx_tail + 1) % LORA_RX_BUFFER_SIZE;
     return data;
 }
+
+static int lora_wait_for_tx_done(LoraHandle_t *p_handle) {
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+    // TODO: 送信時間に応じてある程度待機時間は算出可能
+    // AUXピンが未接続の場合は、従来通り固定長ディレイで代用
+    if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
+        R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+        return E_OK;
+    }
+
+    // タイムアウトを6秒に設定してセマフォを待つ
+    ER err = tk_wai_sem(p_handle->tx_done_sem_id, 1, 6000);
+
+    return err; // E_OK:成功, E_TMOUT:タイムアウト
+#else
+    // 常に固定長ディレイ
+    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    return E_OK;
+#endif
+}
+
 // =====================================
 
 int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
@@ -43,6 +70,26 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     // リングバッファを初期化
     p_handle->rx_head = 0;
     p_handle->rx_tail = 0;
+
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+    // AUXピンが設定されている場合のみセマフォを生成
+    if (LORA_PIN_UNDEFINED != p_handle->hw_config.aux) {
+        // セマフォ生成パケットを定義
+        T_CSEM csem;
+        csem.exinf   = 0;                   // 拡張情報 (未使用)
+        csem.sematr  = TA_TFIFO | TA_FIRST; // FIFO順の待機キュー
+        csem.isemcnt = 0;                   // 初期セマフォカウント
+        csem.maxsem  = 1;                   // 最大セマフォカウント (バイナリセマフォ)
+
+        // セマフォを生成
+        p_handle->tx_done_sem_id = tk_cre_sem(&csem);
+        if (p_handle->tx_done_sem_id < E_OK) {
+            // エラー処理 (IDが負の値で返る)
+            LORA_PRINTF("LoRa_Init: tk_cre_sem failed\n");
+            return -2; // セマフォ生成失敗
+        }
+    }
+#endif
 
     return 0;
 }
@@ -124,6 +171,7 @@ int LoRa_ReceiveFrame(LoraHandle_t * p_handle, RecvFrameE220900T22SJP_t *recv_fr
 }
 
 int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *send_data, int size) {
+    int err = 0;
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
         return -1; // Not initialized
@@ -159,7 +207,10 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
 #endif
 
     p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    err = lora_wait_for_tx_done(p_handle);
+    if (err < 0) {
+        LORA_PRINTF("LoRa_SendFrame: lora_wait_for_tx_done timeout\n");
+    }
     
     // 送信後にモジュールから応答データが返る場合があるため、バッファをクリア
     while (lora_available(p_handle)) {
@@ -170,24 +221,28 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
 }
 
 void LoRa_SwitchToNormalMode(LoraHandle_t * p_handle) {
+    // (M0, M1) = (LOW, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
 void LoRa_SwitchToWORSendingMode(LoraHandle_t * p_handle) {
+    // (M0, M1) = (HIGH, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
 void LoRa_SwitchToWORReceivingMode(LoraHandle_t * p_handle) {
+    // (M0, M1) = (LOW, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
 void LoRa_SwitchToConfigurationMode(LoraHandle_t * p_handle) {
+    // (M0, M1) = (HIGH, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);

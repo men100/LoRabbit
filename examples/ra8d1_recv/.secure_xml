@@ -138,6 +138,7 @@
       <configSetting altId="i3c0.i3c_sda0.p401" configurationId="i3c0.i3c_sda0" isUsedByDriver="true" peripheral="I3C0"/>
       <configSetting altId="iic1.scl1.p512" configurationId="iic1.scl1" isUsedByDriver="true" peripheral="IIC1"/>
       <configSetting altId="iic1.sda1.p511" configurationId="iic1.sda1" isUsedByDriver="true" peripheral="IIC1"/>
+      <configSetting altId="irq1.irq1.p508" configurationId="irq1.irq1" isUsedByDriver="true" peripheral="IRQ1"/>
       <configSetting altId="jtag_fslash_swd.tck.p211" configurationId="jtag_fslash_swd.tck" peripheral="JTAG/SWD"/>
       <configSetting altId="jtag_fslash_swd.tdi.p208" configurationId="jtag_fslash_swd.tdi" peripheral="JTAG/SWD"/>
       <configSetting altId="jtag_fslash_swd.tdo.p209" configurationId="jtag_fslash_swd.tdo" peripheral="JTAG/SWD"/>

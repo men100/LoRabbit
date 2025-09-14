@@ -14,6 +14,10 @@ void g_uart2_callback(uart_callback_args_t *p_args) {
     LoRa_UartCallbackHandler(&s_lora_handle, p_args);
 }
 
+void g_irq1_callback(external_irq_callback_args_t *p_args) {
+    LoRa_AuxCallbackHandler(&s_lora_handle, p_args);
+}
+
 // LoRa設定値
 LoRaConfigItem_t s_config = {
     .own_address              = 0x0000,  // own_address 0
@@ -93,13 +97,14 @@ EXPORT INT usermain(void)
 	out_h(PORT_PODR(4), in_h(PORT_PODR(4))&~(1<<14));   // GREEN
 	out_h(PORT_PODR(1), in_h(PORT_PODR(1))&~(1<<7));    // RED
 
-	tm_putstring((UB*)"LoRa recv test\n");
+	tm_putstring((UB*)"LoRa recv test222\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {
-        .p_uart = &g_uart2,     // FSPで生成されたUARTインスタンス
-        .m0     = PMOD2_9_GPIO, // FSPで定義したM0ピン
-        .m1     = PMOD2_10_GPIO // FSPで定義したM1ピン
+        .p_uart = &g_uart2,      // FSPで生成されたUARTインスタンス
+        .m0     = PMOD2_9_GPIO,  // FSPで定義したM0ピン
+        .m1     = PMOD2_10_GPIO, // FSPで定義したM1ピン
+        .aux    = PMOD2_7_INT    // FSPで定義したAUXピン
     };
 
     // LoRaライブラリを初期化

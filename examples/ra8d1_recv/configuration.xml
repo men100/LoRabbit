@@ -280,6 +280,10 @@
       <description>SCI UART</description>
       <originalPack>Renesas.RA.5.9.0.pack</originalPack>
     </component>
+    <component apiversion="" class="HAL Drivers" condition="" group="all" subgroup="r_icu" variant="" vendor="Renesas" version="5.9.0">
+      <description>External Interrupt</description>
+      <originalPack>Renesas.RA.5.9.0.pack</originalPack>
+    </component>
   </raComponentSelection>
   <raElcConfiguration/>
   <raIcuConfiguration/>
@@ -419,12 +423,23 @@
       <property id="module.driver.uart.tei_ipl" value="board.icu.common.irq.priority12"/>
       <property id="module.driver.uart.eri_ipl" value="board.icu.common.irq.priority12"/>
     </module>
+    <module id="module.driver.external_irq_on_icu.506763462">
+      <property id="module.driver.external_irq.name" value="g_external_irq1"/>
+      <property id="module.driver.external_irq.channel" value="1"/>
+      <property id="module.driver.external_irq.trigger" value="module.driver.external_irq.trigger.trig_both_edge"/>
+      <property id="module.driver.external_irq.filter_enable" value="module.driver.external_irq.filter_enable.false"/>
+      <property id="module.driver.external_irq.filter_source" value="module.driver.external_irq.filter_source.pclk"/>
+      <property id="module.driver.external_irq.clock_source_div" value="module.driver.external_irq.clock_source_div.clock_source_div_by_64"/>
+      <property id="module.driver.external_irq.p_callback" value="g_irq1_callback"/>
+      <property id="module.driver.external_irq.ipl" value="board.icu.common.irq.priority13"/>
+    </module>
     <context id="_hal.0">
       <stack module="module.driver.ioport_on_ioport.0"/>
       <stack module="module.driver.adc_on_adc.1400034532"/>
       <stack module="module.driver.i3c_on_i3c.924298522"/>
       <stack module="module.driver.i2c_on_iic_master.139986097"/>
       <stack module="module.driver.uart_on_sci_b_uart.1299596366"/>
+      <stack module="module.driver.external_irq_on_icu.506763462"/>
     </context>
     <config id="config.driver.adc">
       <property id="config.driver.adc.param_checking_enable" value="config.driver.adc.param_checking_enable.bsp"/>
@@ -442,6 +457,9 @@
     </config>
     <config id="config.driver.ioport">
       <property id="config.driver.ioport.checking" value="config.driver.ioport.checking.system"/>
+    </config>
+    <config id="config.driver.icu">
+      <property id="config.driver.icu.param_checking_enable" value="config.driver.icu.param_checking_enable.bsp"/>
     </config>
     <config id="config.driver.i3c">
       <property id="config.driver.i3c.param_checking_enable" value="config.driver.i3c.param_checking_enable.bsp"/>
@@ -662,6 +680,8 @@
       <configSetting altId="iic1.mode.enabled.a" configurationId="iic1.mode"/>
       <configSetting altId="iic1.scl1.p512" configurationId="iic1.scl1"/>
       <configSetting altId="iic1.sda1.p511" configurationId="iic1.sda1"/>
+      <configSetting altId="irq1.irq1.p508" configurationId="irq1.irq1"/>
+      <configSetting altId="irq1.mode.custom.free" configurationId="irq1.mode"/>
       <configSetting altId="jtag_fslash_swd.mode.jtag.free" configurationId="jtag_fslash_swd.mode"/>
       <configSetting altId="jtag_fslash_swd.tck.p211" configurationId="jtag_fslash_swd.tck"/>
       <configSetting altId="jtag_fslash_swd.tdi.p208" configurationId="jtag_fslash_swd.tdi"/>
@@ -825,6 +845,9 @@
       <configSetting altId="p506.gpio_mode.gpio_mode_in" configurationId="p506.gpio_mode"/>
       <configSetting altId="p507.output.low" configurationId="p507"/>
       <configSetting altId="p507.gpio_mode.gpio_mode_out.low" configurationId="p507.gpio_mode"/>
+      <configSetting altId="p508.irq1.irq1" configurationId="p508"/>
+      <configSetting altId="p508.gpio_irq.gpio_irq_enabled" configurationId="p508.gpio_irq"/>
+      <configSetting altId="p508.gpio_mode.gpio_mode_irq" configurationId="p508.gpio_mode"/>
       <configSetting altId="p511.iic1.sda1" configurationId="p511"/>
       <configSetting altId="p511.gpio_speed.gpio_speed_m" configurationId="p511.gpio_drivecapacity"/>
       <configSetting altId="p511.gpio_mode.gpio_mode_peripheral" configurationId="p511.gpio_mode"/>

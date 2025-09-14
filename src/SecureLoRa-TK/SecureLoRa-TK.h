@@ -2,12 +2,16 @@
 
 #include "hal_data.h"
 #include <stdint.h>
+#include <tk/tkernel.h>
+
+#define LORA_PIN_UNDEFINED (BSP_IO_PORT_FF_PIN_FF)
 
 // ハードウェア構成を定義する構造体
 typedef struct {
     uart_instance_t const * p_uart; // UART
     bsp_io_port_pin_t       m0;     // M0
     bsp_io_port_pin_t       m1;     // M1
+    bsp_io_port_pin_t       aux;    // AUX
 } LoraHwConfig_t;
 
 // LoRaハンドルの本体（すべての状態を保持）
@@ -19,6 +23,11 @@ typedef struct {
     volatile uint8_t rx_buffer[LORA_RX_BUFFER_SIZE];
     volatile uint16_t rx_head;
     volatile uint16_t rx_tail;
+
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+    // 同期用セマフォID
+    ID tx_done_sem_id;
+#endif
 } LoraHandle_t;
 
 // E220-900T22S(JP)の設定項目
@@ -95,3 +104,13 @@ void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle);
  * @param p_args FSPコールバックから渡される引数
  */
 void LoRa_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_args);
+
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+/**
+ * @brief LoRa AUX割り込み時に呼び出すべきハンドラ関数
+ * @note ユーザーはFSPのコールバック関数の中からこの関数を呼び出す
+ * @param p_handle 該当するLoRaハンドル
+ * @param p_args FSPコールバックから渡される引数
+ */
+void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args);
+#endif

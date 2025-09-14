@@ -245,7 +245,7 @@ FSP Configuration
       P505 K8 GPIO ARDUINO_D7 - - "Input mode" - - "BUS: D27; SDHI1: SD1DAT4; SDRAM: DQ27" - IO - - 
       P506 N6 GPIO ARDUINO_D4 - - "Input mode" - - "BUS: D28; SDHI1: SD1DAT5; SDRAM: DQ28" - IO - - 
       P507 L7 GPIO MIKROBUS_RES L - "Output mode (Initial Low)" - - "BUS: D29; SDHI1: SD1DAT6; SDRAM: DQ29" - IO - - 
-      P508 M7 - PMOD2_7_INT - - Disabled - - "BUS: D30; IRQ1: IRQ1; SDHI1: SD1DAT7; SDRAM: DQ30" - なし - - 
+      P508 M7 IRQ1_IRQ1 PMOD2_7_INT - IRQ1 "IRQ mode" - - "BUS: D30; IRQ1: IRQ1; SDHI1: SD1DAT7; SDRAM: DQ30" - IO - - 
       P509 L8 - ARDUINO_D3 - - Disabled - - "BUS: D31; IRQ2: IRQ2; SDRAM: DQ31; ULPT1: ULPTEVI1" - なし - - 
       P510 N7 - DISP_INT - - Disabled - - "BUS: BC3; BUS: WR3; IRQ3: IRQ3; ULPT0: ULPTEVI0" - なし - - 
       P511 K9 IIC1_SDA1 I3C_SDA1 M None "Peripheral mode" - - "CANFD1: CRX1; GPT0: GTIOC0B; IIC1: SDA1; IRQ15: IRQ15" - IO - - 
@@ -470,7 +470,7 @@ FSP Configuration
       P505 K8 - ARDUINO_D7 - - Disabled - - "BUS: D27; SDHI1: SD1DAT4; SDRAM: DQ27" - IO - - 
       P506 N6 - ARDUINO_D4 - - Disabled - - "BUS: D28; SDHI1: SD1DAT5; SDRAM: DQ28" - IO - - 
       P507 L7 - MIKROBUS_RES L - Disabled - - "BUS: D29; SDHI1: SD1DAT6; SDRAM: DQ29" - IO - - 
-      P508 M7 - PMOD2_7_INT - - Disabled - - "BUS: D30; IRQ1: IRQ1; SDHI1: SD1DAT7; SDRAM: DQ30" - なし - - 
+      P508 M7 - PMOD2_7_INT - None Disabled - - "BUS: D30; IRQ1: IRQ1; SDHI1: SD1DAT7; SDRAM: DQ30" - IO - - 
       P509 L8 - ARDUINO_D3 - - Disabled - - "BUS: D31; IRQ2: IRQ2; SDRAM: DQ31; ULPT1: ULPTEVI1" - なし - - 
       P510 N7 - DISP_INT - - Disabled - - "BUS: BC3; BUS: WR3; IRQ3: IRQ3; ULPT0: ULPTEVI0" - なし - - 
       P511 K9 - I3C_SDA1 L None Disabled - - "CANFD1: CRX1; GPT0: GTIOC0B; IIC1: SDA1; IRQ15: IRQ15" - IO - - 
@@ -642,6 +642,9 @@ FSP Configuration
     DTC Support: Disable
     Flow Control Support: Disable
     
+  Module "External IRQ (r_icu)"
+    Parameter Checking: Default (BSP)
+    
   HAL
     Instance "g_ioport I/O Port (r_ioport)"
       Name: g_ioport
@@ -776,4 +779,14 @@ FSP Configuration
       Interrupts: Transmit Data Empty Interrupt Priority: Priority 12
       Interrupts: Transmit End Interrupt Priority: Priority 12
       Interrupts: Error Interrupt Priority: Priority 12
+      
+    Instance "g_external_irq1 External IRQ (r_icu)"
+      Name: g_external_irq1
+      Channel: 1
+      Trigger: Both Edges
+      Digital Filtering: Disabled
+      Filter Source: PCLK filter
+      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
+      Callback: g_irq1_callback
+      Pin Interrupt Priority: Priority 13
       
