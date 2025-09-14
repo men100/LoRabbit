@@ -21,21 +21,19 @@ void g_irq1_callback(external_irq_callback_args_t *p_args) {
 
 // LoRa設定値
 LoRaConfigItem_t s_config = {
-    .own_address              = 0x0000,  // own_address 0
-    .baud_rate                = 0b011,   // baud_rate 9600 bps
-    .air_data_rate            = 0b10000, // air_data_rate SF:9 BW:125
-    .subpacket_size           = 0b00,    // subpacket_size 200
-    .rssi_ambient_noise_flag  = 0b1,     // rssi_ambient_noise_flag 有効
-    .transmission_pause_flag  = 0b0,     // transmission_pause_flag 有効
-    .transmitting_power       = 0b01,    // transmitting_power 13 dBm
-    .own_channel              = 0x00,    // own_channel 0
-    .rssi_byte_flag           = 0b1,     // rssi_byte_flag 有効
-    .transmission_method_type = 0b1,     // transmission_method_type 固定送信モード
-    .lbt_flag                 = 0b0,     // lbt_flag 有効
-    .wor_cycle                = 0b011,   // wor_cycle 2000 ms
-    .encryption_key           = 0x0000,  // encryption_key 0
-    .target_address           = 0x0000,  // target_address 0
-    .target_channel           = 0x00     // target_channel 0
+    .own_address              = 0x0000,
+    .baud_rate                = LORA_UART_BAUD_RATE_9600_BPS,
+    .air_data_rate            = LORA_AIR_DATA_RATE_1758_BPS_SF_8_BW_125,
+    .payload_size             = LORA_PAYLOAD_SIZE_200_BYTE,
+    .rssi_ambient_noise_flag  = LORA_FLAG_ENABLED,
+    .transmitting_power       = LORA_TRANSMITTING_POWER_13_DBM,
+    .own_channel              = 0,
+    .rssi_byte_flag           = LORA_FLAG_ENABLED,
+    .transmission_method_type = LORA_TRANSMISSION_METHOD_TYPE_FIXED,
+    .wor_cycle                = LORA_WOR_CYCLE_2000_MS,
+    .encryption_key           = 0x0000,
+    .target_address           = 0x0000,
+    .target_channel           = 0
 };
 
 LOCAL void task_1(INT stacd, void *exinf);	// task execution function

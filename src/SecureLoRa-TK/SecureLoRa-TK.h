@@ -6,6 +6,69 @@
 
 #define LORA_PIN_UNDEFINED (BSP_IO_PORT_FF_PIN_FF)
 
+typedef enum {
+    LORA_FLAG_DISABLED = 0b0,
+    LORA_FLAG_ENABLED  = 0b1,
+} LoraFlag_t;
+
+typedef enum {
+    LORA_UART_BAUD_RATE_1200_BPS   = 0b000, //   1,200bps
+    LORA_UART_BAUD_RATE_2400_BPS   = 0b001, //   2,400bps
+    LORA_UART_BAUD_RATE_4800_BPS   = 0b010, //   4,800bps
+    LORA_UART_BAUD_RATE_9600_BPS   = 0b011, //   9,600bps (default)
+    LORA_UART_BAUD_RATE_19200_BPS  = 0b100, //  19,200bps
+    LORA_UART_BAUD_RATE_38400_BPS  = 0b101, //  38,400bps
+    LORA_UART_BAUD_RATE_57600_BPS  = 0b110, //  57,600bps
+    LORA_UART_BAUD_RATE_115200_BPS = 0b110, // 115,200bps
+} LoraUartBaudRate_t;
+
+typedef enum {
+    LORA_AIR_DATA_RATE_15625_BPS_SF_5_BW_125  = 0b00000, // 15,625bps, SF=5,  BW=125kHz
+    LORA_AIR_DATA_RATE_9375_BPS_SF_6_BW_125   = 0b00100, //  9,375bps, SF=6,  BW=125kHz
+    LORA_AIR_DATA_RATE_5469_BPS_SF_7_BW_125   = 0b01000, //  5,469bps, SF=7,  BW=125kHz
+    LORA_AIR_DATA_RATE_3125_BPS_SF_8_BW_125   = 0b01100, //  3,125bps, SF=8,  BW=125kHz
+    LORA_AIR_DATA_RATE_1758_BPS_SF_8_BW_125   = 0b10000, //  1,758bps, SF=9,  BW=125kHz (default)
+    LORA_AIR_DATA_RATE_31250_BPS_SF_5_BW_250  = 0b00001, // 31,250bps, SF=5,  BW=250kHz
+    LORA_AIR_DATA_RATE_18750_BPS_SF_6_BW_250  = 0b00101, // 18,750bps, SF=6,  BW=250kHz
+    LORA_AIR_DATA_RATE_10938_BPS_SF_7_BW_250  = 0b01001, // 10,938bps, SF=7,  BW=250kHz
+    LORA_AIR_DATA_RATE_6250_BPS_SF_8_BW_250   = 0b01101, //  6,250bps, SF=8,  BW=250kHz
+    LORA_AIR_DATA_RATE_3516_BPS_SF_9_BW_250   = 0b10001, //  3,516bps, SF=9,  BW=250kHz
+    LORA_AIR_DATA_RATE_1953_BPS_SF_10_BW_250  = 0b10101, //  1,953bps, SF=10, BW=250kHz
+    LORA_AIR_DATA_RATE_62500_BPS_SF_5_BW_500  = 0b00010, // 62,500bps, SF=5,  BW=500kHz
+    LORA_AIR_DATA_RATE_37500_BPS_SF_6_BW_500  = 0b00110, // 37,500bps, SF=6,  BW=500kHz
+    LORA_AIR_DATA_RATE_21875_BPS_SF_7_BW_500  = 0b01010, // 21,875bps, SF=7,  BW=500kHz
+    LORA_AIR_DATA_RATE_12500_BPS_SF_8_BW_500  = 0b01110, // 12,500bps, SF=8,  BW=500kHz
+    LORA_AIR_DATA_RATE_7031_BPS_SF_8_BW_500   = 0b10010, //  7,031bps, SF=9,  BW=500kHz
+    LORA_AIR_DATA_RATE_3906_BPS_SF_8_BW_500   = 0b10110, //  3,906bps, SF=10, BW=500kHz
+    LORA_AIR_DATA_RATE_2148_BPS_SF_8_BW_500   = 0b11010, //  2,148bps, SF=11, BW=500kHz
+} LoraAirDateRate_t;
+
+typedef enum {
+    LORA_PAYLOAD_SIZE_200_BYTE = 0b00, // 200byte (default)
+    LORA_PAYLOAD_SIZE_128_BYTE = 0b01, // 128byte
+    LORA_PAYLOAD_SIZE_64_BYTE  = 0b10, //  64byte
+    LORA_PAYLOAD_SIZE_32_BYTE  = 0b11, //  32byte
+} LoraPayloadSize_t;
+
+typedef enum {
+    LORA_TRANSMITTING_POWER_13_DBM = 0b01, // 13dBm (default)
+    LORA_TRANSMITTING_POWER_7_DBM  = 0b10, //  7dBm
+    LORA_TRANSMITTING_POWER_0_DBM  = 0b11, //  0dBm
+} LoraTransmittingPower_t;
+
+typedef enum {
+    LORA_TRANSMISSION_METHOD_TYPE_TRANSPARENT = 0b0, // トランスペアレント送信モード (default)
+    LORA_TRANSMISSION_METHOD_TYPE_FIXED       = 0b1, // 固定送信モード
+} LoraTransmissionMethodType_t;
+
+typedef enum {
+    LORA_WOR_CYCLE_500_MS  = 0b000, //   500ms
+    LORA_WOR_CYCLE_1000_MS = 0b001, // 1,000ms
+    LORA_WOR_CYCLE_1500_MS = 0b010, // 1,500ms
+    LORA_WOR_CYCLE_2000_MS = 0b011, // 2,000ms (default)
+    LORA_WOR_CYCLE_3000_MS = 0b101, // 3,000ms
+} LoraWorCycle_t;
+
 // ハードウェア構成を定義する構造体
 typedef struct {
     uart_instance_t const * p_uart; // UART
@@ -33,17 +96,15 @@ typedef struct {
 // E220-900T22S(JP)の設定項目
 typedef struct {
   uint16_t own_address;
-  uint8_t baud_rate;
-  uint8_t air_data_rate;
-  uint8_t subpacket_size;
-  uint8_t rssi_ambient_noise_flag;
-  uint8_t transmission_pause_flag;
-  uint8_t transmitting_power;
+  LoraUartBaudRate_t baud_rate;
+  LoraAirDateRate_t air_data_rate;
+  LoraPayloadSize_t payload_size;
+  LoraFlag_t rssi_ambient_noise_flag;
+  LoraTransmittingPower_t transmitting_power;
   uint8_t own_channel;
-  uint8_t rssi_byte_flag;
-  uint8_t transmission_method_type;
-  uint8_t lbt_flag;
-  uint16_t wor_cycle;
+  LoraFlag_t rssi_byte_flag;
+  LoraTransmissionMethodType_t transmission_method_type;
+  LoraWorCycle_t wor_cycle;
   uint16_t encryption_key;
   uint16_t target_address;
   uint8_t target_channel;

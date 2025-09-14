@@ -113,11 +113,11 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
     command[3] = p_config->own_address >> 8;
     command[4] = p_config->own_address & 0xff;
     command[5] = (p_config->baud_rate << 5) | (p_config->air_data_rate);
-    command[6] = (p_config->subpacket_size << 6) | (p_config->rssi_ambient_noise_flag << 5) |
-                 (p_config->transmission_pause_flag << 4) | (p_config->transmitting_power);
+    command[6] = (p_config->payload_size << 6) | (p_config->rssi_ambient_noise_flag << 5) |
+                 (p_config->transmitting_power);
     command[7] = p_config->own_channel;
     command[8] = (p_config->rssi_byte_flag << 7) | (p_config->transmission_method_type << 6) |
-                 (p_config->lbt_flag << 4) | (p_config->wor_cycle);
+                 (p_config->wor_cycle);
     command[9] = p_config->encryption_key >> 8;
     command[10] = p_config->encryption_key & 0xff;
 
@@ -177,13 +177,14 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
         return -1; // Not initialized
     }
 
-    uint8_t subpacket_size = 200;
-    switch (config->subpacket_size) {
-        case 0b01: subpacket_size = 128; break;
-        case 0b10: subpacket_size = 64; break;
-        case 0b11: subpacket_size = 32; break;
+    uint8_t payload_size = 0;
+    switch (config->payload_size) {
+        case LORA_PAYLOAD_SIZE_200_BYTE: payload_size = 200; break;
+        case LORA_PAYLOAD_SIZE_128_BYTE: payload_size = 128; break;
+        case LORA_PAYLOAD_SIZE_64_BYTE: payload_size = 64; break;
+        case LORA_PAYLOAD_SIZE_32_BYTE: payload_size = 32; break;
     }
-    if (size > subpacket_size) {
+    if (size > payload_size) {
         LORA_PRINTF("send data length too long\n");
         return 1;
     }
