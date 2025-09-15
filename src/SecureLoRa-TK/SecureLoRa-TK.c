@@ -23,6 +23,212 @@ void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_
 }
 #endif
 
+// テクニカルデータシートより引用
+int get_time_on_air_msec(LoraAirDateRate_t air_data_rate, LoraPayloadSize_t payload_size) {
+    switch (air_data_rate) {
+        case LORA_AIR_DATA_RATE_15625_BPS_SF_5_BW_125:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 54;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 81;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 136;
+                default:
+                    return 197;
+            }
+        case LORA_AIR_DATA_RATE_9375_BPS_SF_6_BW_125:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 85;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 126;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 207;
+                default:
+                    return 300;
+            }
+        case LORA_AIR_DATA_RATE_5469_BPS_SF_7_BW_125:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 146;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 213;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 346;
+                default:
+                    return 489;
+            }
+        case LORA_AIR_DATA_RATE_3125_BPS_SF_8_BW_125:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 241;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 353;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 568;
+                default:
+                    return 814;
+            }
+        case LORA_AIR_DATA_RATE_1758_BPS_SF_9_BW_125:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 399;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 604;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 972;
+                default:
+                    return 1382;
+            }
+        case LORA_AIR_DATA_RATE_31250_BPS_SF_5_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 29;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 42;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 70;
+                default:
+                    return 100;
+            }
+        case LORA_AIR_DATA_RATE_18750_BPS_SF_6_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 45;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 66;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 107;
+                default:
+                    return 152;
+            }
+        case LORA_AIR_DATA_RATE_10938_BPS_SF_7_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 78;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 112;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 178;
+                default:
+                    return 250;
+            }
+        case LORA_AIR_DATA_RATE_6250_BPS_SF_8_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 131;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 187;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 295;
+                default:
+                    return 418;
+            }
+        case LORA_AIR_DATA_RATE_3516_BPS_SF_9_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 220;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 323;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 507;
+                default:
+                    return 712;
+            }
+        case LORA_AIR_DATA_RATE_1953_BPS_SF_10_BW_250:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 378;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 542;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 870;
+                default:
+                    return 1239;
+            }
+        case LORA_AIR_DATA_RATE_62500_BPS_SF_5_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 15;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 22;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 36;
+                default:
+                    return 51;
+            }
+        case LORA_AIR_DATA_RATE_37500_BPS_SF_6_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 24;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 34;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 55;
+                default:
+                    return 78;
+            }
+        case LORA_AIR_DATA_RATE_21875_BPS_SF_7_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 42;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 59;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 92;
+                default:
+                    return 128;
+            }
+        case LORA_AIR_DATA_RATE_12500_BPS_SF_8_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 71;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 99;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 153;
+                default:
+                    return 214;
+            }
+        case LORA_AIR_DATA_RATE_7031_BPS_SF_9_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 121;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 172;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 264;
+                default:
+                    return 366;
+            }
+        case LORA_AIR_DATA_RATE_3906_BPS_SF_10_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 210;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 292;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 466;
+                default:
+                    return 640;
+            }
+        case LORA_AIR_DATA_RATE_2148_BPS_SF_11_BW_500:
+            switch (payload_size) {
+                case LORA_PAYLOAD_SIZE_32_BYTE:
+                    return 358;
+                case LORA_PAYLOAD_SIZE_64_BYTE:
+                    return 501;
+                case LORA_PAYLOAD_SIZE_128_BYTE:
+                    return 788;
+                default:
+                    return 1116;
+            }
+        default:
+            return 1382;
+    }
+}
+
 static int lora_available(LoraHandle_t *p_handle) {
     return (p_handle->rx_head - p_handle->rx_tail + LORA_RX_BUFFER_SIZE) % LORA_RX_BUFFER_SIZE;
 }
@@ -37,12 +243,11 @@ static int lora_read(LoraHandle_t *p_handle) {
     return data;
 }
 
-static int lora_wait_for_tx_done(LoraHandle_t *p_handle) {
+static int lora_wait_for_tx_done(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
 #ifdef SECURELORA_TK_USE_AUX_IRQ
-    // TODO: 送信時間に応じてある程度待機時間は算出可能
-    // AUXピンが未接続の場合は、従来通り固定長ディレイで代用
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
-        R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+        int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
+        R_BSP_SoftwareDelay(time, BSP_DELAY_UNITS_MILLISECONDS);
         return E_OK;
     }
 
@@ -51,8 +256,8 @@ static int lora_wait_for_tx_done(LoraHandle_t *p_handle) {
 
     return err; // E_OK:成功, E_TMOUT:タイムアウト
 #else
-    // 常に固定長ディレイ
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
+    R_BSP_SoftwareDelay(time, BSP_DELAY_UNITS_MILLISECONDS);
     return E_OK;
 #endif
 }
@@ -94,7 +299,7 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     return 0;
 }
 
-int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
+int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
         return -1; // Not initialized
@@ -146,7 +351,7 @@ int LoRa_InitModule(LoraHandle_t * p_handle, LoRaConfigItem_t * p_config) {
     return ret;
 }
 
-int LoRa_ReceiveFrame(LoraHandle_t * p_handle, RecvFrameE220900T22SJP_t *recv_frame) {
+int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame) {
     int len = 0;
     memset(recv_frame->recv_data, 0x00, sizeof(recv_frame->recv_data));
 
@@ -170,7 +375,7 @@ int LoRa_ReceiveFrame(LoraHandle_t * p_handle, RecvFrameE220900T22SJP_t *recv_fr
     return 0;
 }
 
-int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *send_data, int size) {
+int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *send_data, int size) {
     int err = 0;
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
@@ -178,7 +383,7 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
     }
 
     uint8_t payload_size = 0;
-    switch (config->payload_size) {
+    switch (p_config->payload_size) {
         case LORA_PAYLOAD_SIZE_200_BYTE: payload_size = 200; break;
         case LORA_PAYLOAD_SIZE_128_BYTE: payload_size = 128; break;
         case LORA_PAYLOAD_SIZE_64_BYTE: payload_size = 64; break;
@@ -190,9 +395,9 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
     }
 
     uint8_t frame[3 + 200]; // 最大サイズでバッファ確保
-    frame[0] = config->target_address >> 8;
-    frame[1] = config->target_address & 0xff;
-    frame[2] = config->target_channel;
+    frame[0] = p_config->target_address >> 8;
+    frame[1] = p_config->target_address & 0xff;
+    frame[2] = p_config->target_channel;
     memcpy(frame + 3, send_data, size);
     int frame_size = 3 + size;
 
@@ -208,7 +413,7 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
 #endif
 
     p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
-    err = lora_wait_for_tx_done(p_handle);
+    err = lora_wait_for_tx_done(p_handle, p_config);
     if (err < 0) {
         LORA_PRINTF("LoRa_SendFrame: lora_wait_for_tx_done timeout\n");
     }
@@ -221,28 +426,28 @@ int LoRa_SendFrame(LoraHandle_t * p_handle, LoRaConfigItem_t *config, uint8_t *s
     return 0;
 }
 
-void LoRa_SwitchToNormalMode(LoraHandle_t * p_handle) {
+void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (LOW, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
-void LoRa_SwitchToWORSendingMode(LoraHandle_t * p_handle) {
+void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (HIGH, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
-void LoRa_SwitchToWORReceivingMode(LoraHandle_t * p_handle) {
+void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (LOW, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
     R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
 }
 
-void LoRa_SwitchToConfigurationMode(LoraHandle_t * p_handle) {
+void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (HIGH, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);

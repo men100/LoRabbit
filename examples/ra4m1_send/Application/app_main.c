@@ -18,7 +18,7 @@ void g_uart0_callback(uart_callback_args_t *p_args) {
 LoRaConfigItem_t s_config = {
     .own_address              = 0x0000,
     .baud_rate                = LORA_UART_BAUD_RATE_9600_BPS,
-    .air_data_rate            = LORA_AIR_DATA_RATE_1758_BPS_SF_8_BW_125,
+    .air_data_rate            = LORA_AIR_DATA_RATE_1758_BPS_SF_9_BW_125,
     .payload_size             = LORA_PAYLOAD_SIZE_200_BYTE,
     .rssi_ambient_noise_flag  = LORA_FLAG_ENABLED,
     .transmitting_power       = LORA_TRANSMITTING_POWER_13_DBM,
