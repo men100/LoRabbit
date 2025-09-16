@@ -53,7 +53,7 @@ LOCAL void task_1(INT stacd, void *exinf)
 {
     while(1) {
         tm_printf((UB*)"task 1\n");
-        tk_dly_tsk(500);
+        tk_dly_tsk(1000);
     }
 }
 

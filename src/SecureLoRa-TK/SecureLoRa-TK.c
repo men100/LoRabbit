@@ -271,7 +271,7 @@ static int lora_wait_for_tx_done(LoraHandle_t *p_handle, LoRaConfigItem_t *p_con
 #ifdef SECURELORA_TK_USE_AUX_IRQ
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
-        R_BSP_SoftwareDelay(time, BSP_DELAY_UNITS_MILLISECONDS);
+        tk_dly_tsk(time);
         return E_OK;
     }
 
@@ -344,7 +344,7 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
 
     LORA_PRINTF("switch to configuration mode\n");
     LoRa_SwitchToConfigurationMode(p_handle);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 
     uint8_t command[11] = {0xC0, 0x00, 0x08}; // ヘッダ(3) + パラメータ(8)
     uint8_t response[11] = {0};
@@ -368,7 +368,7 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
     LORA_PRINTF("\n");
 
     p_uart->p_api->write(p_uart->p_ctrl, command, sizeof(command));
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 
     while (lora_available(p_handle) && response_len < sizeof(response)) {
         response[response_len++] = lora_read(p_handle);
@@ -446,14 +446,14 @@ int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_fra
         if ((lora_available(p_handle) == 0) && (len > 0)) {
             // データが来ていて、かつバッファが空になったら、少し待ってから再度確認
             // それでもデータがなければ受信完了とみなす
-            R_BSP_SoftwareDelay(10, BSP_DELAY_UNITS_MILLISECONDS);
+            tk_dly_tsk(10);
             if (lora_available(p_handle) == 0) {
                 goto receive_complete;
             }
         }
 
         // 受信データがまだない場合、待つ
-        R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+        tk_dly_tsk(100);
     }
 
 receive_complete:
@@ -527,26 +527,26 @@ void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (LOW, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 }
 
 void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (HIGH, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 }
 
 void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (LOW, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 }
 
 void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
     // (M0, M1) = (HIGH, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
-    R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
+    tk_dly_tsk(100);
 }
