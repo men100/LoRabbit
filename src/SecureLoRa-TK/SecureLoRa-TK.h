@@ -69,6 +69,12 @@ typedef enum {
     LORA_WOR_CYCLE_3000_MS = 0b101, // 3,000ms
 } LoraWorCycle_t;
 
+typedef enum {
+    LORA_STATE_IDLE,        // アイドル状態
+    LORA_STATE_WAITING_TX,  // 送信完了(AUX High)を待っている状態
+    LORA_STATE_WAITING_RX,  // 受信開始(AUX Low)を待っている状態
+} LoraState_t;
+
 // ハードウェア構成を定義する構造体
 typedef struct {
     uart_instance_t const * p_uart; // UART
@@ -90,6 +96,10 @@ typedef struct {
 #ifdef SECURELORA_TK_USE_AUX_IRQ
     // 同期用セマフォID
     ID tx_done_sem_id;
+    ID rx_start_sem_id;
+
+    // 内部状態
+    volatile LoraState_t state;
 #endif
 } LoraHandle_t;
 
@@ -135,10 +145,12 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config);
 
 /**
  * @brief LoRa受信を行う
+ * @param p_handle 操作対象のハンドル
  * @param recv_frame LoRa受信データの格納先
- * @return 0:成功, 1:失敗
+ * @param timeout [割り込み利用時のみ] 受信開始を待つタイムアウト値(ms)。ポーリング時は無視される。
+ * @return 0より大きい:受信データ長, 0:タイムアウト(受信なし), 負:エラー
  */
-int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame);
+int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout);
 
 /**
  * @brief LoRa送信を行う

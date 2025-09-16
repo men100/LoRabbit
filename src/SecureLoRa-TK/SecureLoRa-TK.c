@@ -19,7 +19,31 @@ void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_
 
 #ifdef SECURELORA_TK_USE_AUX_IRQ
 void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args) {
-    tk_sig_sem(p_handle->tx_done_sem_id, 1);
+    bsp_io_level_t pin_level;
+
+    // 現在のピンレベルを読み取る
+    R_IOPORT_PinRead(&g_ioport_ctrl, p_handle->hw_config.aux, &pin_level);
+    switch (p_handle->state) {
+        case LORA_STATE_WAITING_TX:
+            // 送信完了待ちの状態で、ピンがHighになった (立ち上がり)
+            if (BSP_IO_LEVEL_HIGH == pin_level) {
+                p_handle->state = LORA_STATE_IDLE;
+                tk_sig_sem(p_handle->tx_done_sem_id, 1);
+            }
+            break;
+
+        case LORA_STATE_WAITING_RX:
+            // 受信開始待ちの状態で、ピンがLowになった (立ち下がり)
+            if (BSP_IO_LEVEL_LOW == pin_level) {
+                p_handle->state = LORA_STATE_IDLE;
+                tk_sig_sem(p_handle->rx_start_sem_id, 1);
+            }
+            break;
+
+        default:
+            // アイドル時など、予期しない割り込みは無視
+            break;
+    }
 }
 #endif
 
@@ -286,13 +310,24 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
         csem.isemcnt = 0;                   // 初期セマフォカウント
         csem.maxsem  = 1;                   // 最大セマフォカウント (バイナリセマフォ)
 
-        // セマフォを生成
+        // 送信完了用セマフォを生成
         p_handle->tx_done_sem_id = tk_cre_sem(&csem);
         if (p_handle->tx_done_sem_id < E_OK) {
             // エラー処理 (IDが負の値で返る)
             LORA_PRINTF("LoRa_Init: tk_cre_sem failed\n");
-            return -2; // セマフォ生成失敗
+            return -2;
         }
+
+        // 受信開始用セマフォを生成
+        p_handle->rx_start_sem_id = tk_cre_sem(&csem);
+        if (p_handle->rx_start_sem_id < E_OK) {
+            // エラー処理 (IDが負の値で返る)
+            LORA_PRINTF("LoRa_Init: tk_cre_sem failed\n");
+            return -3;
+        }
+
+        // ステートを初期化
+        p_handle->state = LORA_STATE_IDLE;
     }
 #endif
 
@@ -351,28 +386,83 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
     return ret;
 }
 
-int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame) {
+#define POST_RECEIVE_TIMEOUT_MS_DEFAULT 5
+int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout) {
     int len = 0;
     memset(recv_frame->recv_data, 0x00, sizeof(recv_frame->recv_data));
 
+#if defined(SECURELORA_TK_USE_AUX_IRQ)
+    // AUXピンが未接続の場合は、このイベント駆動の受信はできない
+    if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
+        LORA_PRINTF((UB*)"# ERROR: LoRa_ReceiveFrame in IRQ mode requires AUX pin.\n");
+        return -1; // 未サポートエラー
+    }
+
+    // 受信開始前にステートを設定
+    p_handle->state = LORA_STATE_WAITING_RX;
+
+    // 受信開始(AUX Low)をセマフォで待つ
+    ER err = tk_wai_sem(p_handle->rx_start_sem_id, 1, timeout);
+    if (err != E_OK) {
+        p_handle->state = LORA_STATE_IDLE;
+        return (err == E_TMOUT) ? 0 : -1; // タイムアウトなら受信データなし(0)、それ以外はエラー(-1)
+    }
+
+    // 受信が開始されたので、UARTバッファからデータを最後まで読み出す
+    // (データ受信完了の明確な通知はないため、データ間が一定時間空いたら完了とみなす)
+    int post_receive_timeout_ms = POST_RECEIVE_TIMEOUT_MS_DEFAULT; // データ間のタイムアウト
+    while (post_receive_timeout_ms > 0) {
+        if (lora_available(p_handle)) {
+            recv_frame->recv_data[len] = lora_read(p_handle);
+            len++;
+            if (len >= (int)sizeof(recv_frame->recv_data) - 1) {
+                break; // バッファ満杯
+            }
+            // タイムアウトをリセット
+            post_receive_timeout_ms = POST_RECEIVE_TIMEOUT_MS_DEFAULT;
+        } else {
+            tk_dly_tsk(1); // 1ms待機
+            post_receive_timeout_ms--;
+        }
+    }
+
+    if (len > 0) {
+        recv_frame->recv_data_len = len - 1;
+        recv_frame->rssi = recv_frame->recv_data[len - 1] - 256;
+    }
+    return len > 0 ? (int)recv_frame->recv_data_len : 0;
+#else
+    // 従来のポーリング方式で受信を待つ
     while (1) {
         while (lora_available(p_handle)) {
             recv_frame->recv_data[len] = lora_read(p_handle);
             len++;
-            if (len >= (int)sizeof(recv_frame->recv_data) -1) return 1;
+            if (len >= (int)sizeof(recv_frame->recv_data) -1) {
+                // バッファが満杯になったら強制的に終了
+                goto receive_complete;
+            }
         }
 
         if ((lora_available(p_handle) == 0) && (len > 0)) {
+            // データが来ていて、かつバッファが空になったら、少し待ってから再度確認
+            // それでもデータがなければ受信完了とみなす
             R_BSP_SoftwareDelay(10, BSP_DELAY_UNITS_MILLISECONDS);
             if (lora_available(p_handle) == 0) {
-                recv_frame->recv_data_len = len - 1;
-                recv_frame->rssi = recv_frame->recv_data[len - 1] - 256;
-                break;
+                goto receive_complete;
             }
         }
+
+        // 受信データがまだない場合、待つ
         R_BSP_SoftwareDelay(100, BSP_DELAY_UNITS_MILLISECONDS);
     }
-    return 0;
+
+receive_complete:
+    if (len > 0) {
+        recv_frame->recv_data_len = len - 1;
+        recv_frame->rssi = recv_frame->recv_data[len - 1] - 256;
+    }
+    return (int)recv_frame->recv_data_len;
+#endif
 }
 
 int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *send_data, int size) {
@@ -410,6 +500,13 @@ int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *
         }
       }
       LORA_PRINTF("\n");
+#endif
+
+#ifdef SECURELORA_TK_USE_AUX_IRQ
+    //  送信前にステートを設定 ★★★
+    if (LORA_PIN_UNDEFINED != p_handle->hw_config.aux) {
+        p_handle->state = LORA_STATE_WAITING_TX;
+    }
 #endif
 
     p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
