@@ -73,12 +73,12 @@ LOCAL void task_2(INT stacd, void *exinf)
     // カウンタ
     int counter = 0;
 
+    // 通常モードに移行して送信開始
+    tm_putstring((UB*)"Switching to Normal Mode.\n");
+    LoRa_SwitchToNormalMode(&s_lora_handle);
+
 	while(1) {
 		tm_printf((UB*)"task 2\n");
-
-	    // 通常モードに移行して送信開始
-	    tm_putstring((UB*)"Switching to Normal Mode.\n");
-	    LoRa_SwitchToNormalMode(&s_lora_handle);
 
 	    uint8_t send_buffer[50];
         int len = snprintf((char*)send_buffer, sizeof(send_buffer), "EK-RA8D1 Packet #%d", counter++);

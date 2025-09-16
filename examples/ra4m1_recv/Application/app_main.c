@@ -61,12 +61,13 @@ LOCAL void task_2(INT stacd, void *exinf)
 {
     RecvFrameE220900T22SJP_t recv_frame;
 
+    // 通常モードに移行して受信開始
+    tm_putstring((UB*)"Switching to Normal Mode.\n");
+    LoRa_SwitchToNormalMode(&s_lora_handle);
+
     while(1) {
         tm_printf((UB*)"task 2\n");
 
-        // 通常モードに移行して受信開始
-        tm_putstring((UB*)"Switching to Normal Mode.\n");
-        LoRa_SwitchToNormalMode(&s_lora_handle);
         if (LoRa_ReceiveFrame(&s_lora_handle, &recv_frame, TMO_FEVR) > 0) {
             tm_printf((UB*)"Received! Length: %d, RSSI: %d dBm\n", recv_frame.recv_data_len, recv_frame.rssi);
             tm_printf((UB*)"Data: %.*s\n", recv_frame.recv_data_len, recv_frame.recv_data);
