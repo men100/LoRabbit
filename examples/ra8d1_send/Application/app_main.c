@@ -109,7 +109,7 @@ EXPORT INT usermain(void)
         .p_uart = &g_uart2,      // FSPで生成されたUARTインスタンス
         .m0     = PMOD2_9_GPIO,  // FSPで定義したM0ピン
         .m1     = PMOD2_10_GPIO, // FSPで定義したM1ピン
-        .aux    = PMOD2_7_INT    // FSPで定義したAUXピン
+        .aux    = PMOD2_7_INT,   // FSPで定義したAUXピン
     };
 
 	// LoRaライブラリを初期化
