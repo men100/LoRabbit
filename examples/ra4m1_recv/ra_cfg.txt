@@ -111,7 +111,7 @@ FSP Configuration
       P102 73 - - - - Disabled - - "ADC0: ADTRG; ADC0: AN20; AGT0: AGTO; CAN0: CRX; CMP0: CMPIN1; GPT2: GTIOCB; KINT0: KRM2; OPS0: GTOWLO; SCI0: SCK; SCI2: SDA; SCI2: TXD_MOSI; SLCDC0: VL3; SPI0: RSPCK" - なし - - 
       P103 72 - - - - Disabled - - "ADC0: AN19; CAN0: CTX; CMP0: CMPREF1; GPT2: GTIOCA; KINT0: KRM3; OPS0: GTOWUP; SCI0: CTS_RTS_SS; SLCDC0: VL4; SPI0: SSL0" - なし - - 
       P104 71 - - - - Disabled - - "CTSU0: TS13; GPT1: GTIOCB; IRQ0: IRQ01; KINT0: KRM4; POEG1: GTETRG; SCI0: RXD_MISO; SCI0: SCL; SLCDC0: COM0; SPI0: SSL1" - なし - - 
-      P105 70 - - - - Disabled - - "CTSU0: TS34; GPT1: GTIOCA; IRQ0: IRQ00; KINT0: KRM5; POEG0: GTETRG; SLCDC0: COM1; SPI0: SSL2" - なし - - 
+      P105 70 IRQ0_IRQ00 P105_INT - IRQ0 "IRQ mode" - None "CTSU0: TS34; GPT1: GTIOCA; IRQ0: IRQ00; KINT0: KRM5; POEG0: GTETRG; SLCDC0: COM1; SPI0: SSL2" - IO - - 
       P106 69 - - - - Disabled - - "GPT0: GTIOCB; KINT0: KRM6; SLCDC0: COM2; SPI0: SSL3" - なし - - 
       P107 68 - - - - Disabled - - "GPT0: GTIOCA; KINT0: KRM7; SLCDC0: COM3" - なし - - 
       P108 51 DEBUG0_TMS - Low - "Peripheral mode" CMOS None "DEBUG0: SWDIO; DEBUG0: TMS; GPT0: GTIOCB; OPS0: GTOULO; SCI9: CTS_RTS_SS; SPI1: SSL0" - IO - - 
@@ -207,6 +207,9 @@ FSP Configuration
     RS-485 Support: Disable
     IrDA Support: Disabled
     
+  Module "External IRQ (r_icu)"
+    Parameter Checking: Default (BSP)
+    
   HAL
     Instance "g_ioport I/O Port (r_ioport)"
       Name: g_ioport
@@ -244,4 +247,14 @@ FSP Configuration
       Interrupts: Transmit Data Empty Interrupt Priority: Priority 12
       Interrupts: Transmit End Interrupt Priority: Priority 12
       Interrupts: Error Interrupt Priority: Priority 12
+      
+    Instance "g_external_irq0 External IRQ (r_icu)"
+      Name: g_external_irq0
+      Channel: 0
+      Trigger: Both Edges
+      Digital Filtering: Disabled
+      Filter Source: PCLK filter
+      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
+      Callback: g_irq0_callback
+      Pin Interrupt Priority: Priority 13
       

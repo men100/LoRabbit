@@ -6,6 +6,7 @@
 /* Common macro for FSP header files. There is also a corresponding FSP_FOOTER macro at the end of this file. */
 FSP_HEADER
 
+#define P105_INT (BSP_IO_PORT_01_PIN_05)
 #define P303_GPIO (BSP_IO_PORT_03_PIN_03)
 #define P304_GPIO (BSP_IO_PORT_03_PIN_04)
 

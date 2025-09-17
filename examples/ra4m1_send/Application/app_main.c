@@ -14,6 +14,11 @@ void g_uart0_callback(uart_callback_args_t *p_args) {
     LoRa_UartCallbackHandler(&s_lora_handle, p_args);
 }
 
+void g_irq0_callback(external_irq_callback_args_t *p_args) {
+    // ライブラリ提供のハンドラを呼び出し、処理を委譲する
+    LoRa_AuxCallbackHandler(&s_lora_handle, p_args);
+}
+
 // LoRa設定値
 LoRaConfigItem_t s_config = {
     .own_address              = 0x0000,
@@ -92,7 +97,8 @@ EXPORT INT usermain(void)
     LoraHwConfig_t lora_hw_config = {
         .p_uart = &g_uart0,  // FSPで生成されたUARTインスタンス
         .m0     = P303_GPIO, // FSPで定義したM0ピン
-        .m1     = P304_GPIO  // FSPで定義したM1ピン
+        .m1     = P304_GPIO, // FSPで定義したM1ピン
+        .aux    = P105_INT,  // FSPで定義したAUXピン
     };
 
     // LoRaライブラリを初期化
