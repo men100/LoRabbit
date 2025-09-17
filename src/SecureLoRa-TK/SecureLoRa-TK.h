@@ -83,10 +83,27 @@ typedef struct {
     bsp_io_port_pin_t       aux;    // AUX
 } LoraHwConfig_t;
 
+// E220-900T22S(JP)の設定項目
+typedef struct {
+  uint16_t own_address;
+  LoraUartBaudRate_t baud_rate;
+  LoraAirDateRate_t air_data_rate;
+  LoraPayloadSize_t payload_size;
+  LoraFlag_t rssi_ambient_noise_flag;
+  LoraTransmittingPower_t transmitting_power;
+  uint8_t own_channel;
+  LoraFlag_t rssi_byte_flag;
+  LoraTransmissionMethodType_t transmission_method_type;
+  LoraWorCycle_t wor_cycle;
+  uint16_t encryption_key;
+} LoraConfigItem_t;
+
 // LoRaハンドルの本体（すべての状態を保持）
 #define LORA_RX_BUFFER_SIZE 256
 typedef struct {
     LoraHwConfig_t hw_config; // ハードウェア構成
+
+    LoraConfigItem_t current_config; // 現在の設定
 
     // インスタンスごとの受信リングバッファ
     volatile uint8_t rx_buffer[LORA_RX_BUFFER_SIZE];
@@ -102,23 +119,6 @@ typedef struct {
     volatile LoraState_t state;
 #endif
 } LoraHandle_t;
-
-// E220-900T22S(JP)の設定項目
-typedef struct {
-  uint16_t own_address;
-  LoraUartBaudRate_t baud_rate;
-  LoraAirDateRate_t air_data_rate;
-  LoraPayloadSize_t payload_size;
-  LoraFlag_t rssi_ambient_noise_flag;
-  LoraTransmittingPower_t transmitting_power;
-  uint8_t own_channel;
-  LoraFlag_t rssi_byte_flag;
-  LoraTransmissionMethodType_t transmission_method_type;
-  LoraWorCycle_t wor_cycle;
-  uint16_t encryption_key;
-  uint16_t target_address;
-  uint8_t target_channel;
-} LoRaConfigItem_t;
 
 // 受信フレーム構造体
 typedef struct {
@@ -141,7 +141,7 @@ int LoRa_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config);
  * @param p_config LoRa設定値
  * @return 0:成功, 1:失敗, -1:未初期化
  */
-int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config);
+int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config);
 
 /**
  * @brief LoRa受信を行う
@@ -155,12 +155,13 @@ int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_fra
 /**
  * @brief LoRa送信を行う
  * @param p_handle 操作対象のハンドル
- * @param config LoRa設定値
- * @param send_data 送信データ
+ * @param target_address 送信先アドレス
+ * @param target_channel 送信先チャンネル
+ * @param p_send_data 送信データ
  * @param size 送信データサイズ
  * @return 0:成功, 1:失敗
  */
-int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *p_send_data, int size);
+int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size);
 
 /**
  * @brief 各種動作モードへ移行する関数群

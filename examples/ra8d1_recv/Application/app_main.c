@@ -20,7 +20,7 @@ void g_irq1_callback(external_irq_callback_args_t *p_args) {
 }
 
 // LoRa設定値
-LoRaConfigItem_t s_config = {
+LoraConfigItem_t s_config = {
     .own_address              = 0x0000,
     .baud_rate                = LORA_UART_BAUD_RATE_9600_BPS,
     .air_data_rate            = LORA_AIR_DATA_RATE_1758_BPS_SF_9_BW_125,
@@ -32,8 +32,6 @@ LoRaConfigItem_t s_config = {
     .transmission_method_type = LORA_TRANSMISSION_METHOD_TYPE_FIXED,
     .wor_cycle                = LORA_WOR_CYCLE_2000_MS,
     .encryption_key           = 0x0000,
-    .target_address           = 0x0000,
-    .target_channel           = 0
 };
 
 LOCAL void task_1(INT stacd, void *exinf);	// task execution function

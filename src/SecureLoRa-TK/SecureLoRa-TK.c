@@ -267,7 +267,7 @@ static int lora_read(LoraHandle_t *p_handle) {
     return data;
 }
 
-static int lora_wait_for_tx_done(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
+static int lora_wait_for_tx_done(const LoraHandle_t *p_handle, const LoraConfigItem_t *p_config) {
 #ifdef SECURELORA_TK_USE_AUX_IRQ
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
@@ -334,7 +334,7 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     return 0;
 }
 
-int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
+int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
         return -1; // Not initialized
@@ -382,6 +382,9 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config) {
 
     if (response_len != sizeof(command)) {
         ret = 1;
+    } else {
+        // 成功したら、ハンドルに「現在の設定」として保存
+        memcpy(&p_handle->current_config, p_config, sizeof(LoraConfigItem_t));
     }
     return ret;
 }
@@ -465,10 +468,11 @@ receive_complete:
 #endif
 }
 
-int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *send_data, int size) {
+int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size) {
     int err = 0;
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
-    if (NULL == p_uart) {
+    const LoraConfigItem_t *p_config = &p_handle->current_config;
+    if (NULL == p_uart || NULL == p_config) {
         return -1; // Not initialized
     }
 
@@ -485,10 +489,10 @@ int LoRa_SendFrame(LoraHandle_t *p_handle, LoRaConfigItem_t *p_config, uint8_t *
     }
 
     uint8_t frame[3 + 200]; // 最大サイズでバッファ確保
-    frame[0] = p_config->target_address >> 8;
-    frame[1] = p_config->target_address & 0xff;
-    frame[2] = p_config->target_channel;
-    memcpy(frame + 3, send_data, size);
+    frame[0] = target_address >> 8;
+    frame[1] = target_address & 0xff;
+    frame[2] = target_channel;
+    memcpy(frame + 3, p_send_data, size);
     int frame_size = 3 + size;
 
 #if 1 /* print debug */
