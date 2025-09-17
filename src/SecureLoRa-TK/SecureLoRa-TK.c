@@ -286,6 +286,52 @@ static int lora_wait_for_tx_done(const LoraHandle_t *p_handle, const LoraConfigI
 #endif
 }
 
+// 新しい設定を書き込む
+static ER lora_write_config(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
+    const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
+    uint8_t command[11] = {0xC0, 0x00, 0x08}; // ヘッダ(3) + パラメータ(8)
+    uint8_t response[11] = {0};
+    uint8_t response_len = 0;
+
+    // command配列の組み立て
+    command[3] = p_config->own_address >> 8;
+    command[4] = p_config->own_address & 0xff;
+    command[5] = (p_config->baud_rate << 5) | (p_config->air_data_rate);
+    command[6] = (p_config->payload_size << 6) | (p_config->rssi_ambient_noise_flag << 5) |
+                 (p_config->transmitting_power);
+    command[7] = p_config->own_channel;
+    command[8] = (p_config->rssi_byte_flag << 7) | (p_config->transmission_method_type << 6) |
+                 (p_config->wor_cycle);
+    command[9] = p_config->encryption_key >> 8;
+    command[10] = p_config->encryption_key & 0xff;
+
+    LORA_PRINTF("# Command Request\n");
+    for (size_t i = 0; i < sizeof(command); i++) {
+        LORA_PRINTF("0x%02x ", command[i]);
+    }
+    LORA_PRINTF("\n");
+
+    p_uart->p_api->write(p_uart->p_ctrl, command, sizeof(command));
+    tk_dly_tsk(100);
+
+    while (lora_available(p_handle) && response_len < sizeof(response)) {
+        response[response_len++] = lora_read(p_handle);
+    }
+
+    LORA_PRINTF("# Command Response\n");
+    for (size_t i = 0; i < response_len; i++) {
+        LORA_PRINTF("0x%02x ", response[i]);
+    }
+    LORA_PRINTF("\n");
+
+    // TODO: 詳細チェックを実施する
+    if (response_len != sizeof(command) || response[0] != 0xC1) {
+        return E_TMOUT; // 書き込み失敗
+    }
+
+    return E_OK; // 書き込み成功
+}
+
 // =====================================
 
 int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
@@ -340,53 +386,22 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
         return -1; // Not initialized
     }
 
-    int ret = 0;
-
     LORA_PRINTF("switch to configuration mode\n");
     LoRa_SwitchToConfigurationMode(p_handle);
     tk_dly_tsk(100);
 
-    uint8_t command[11] = {0xC0, 0x00, 0x08}; // ヘッダ(3) + パラメータ(8)
-    uint8_t response[11] = {0};
-    uint8_t response_len = 0;
-
-    command[3] = p_config->own_address >> 8;
-    command[4] = p_config->own_address & 0xff;
-    command[5] = (p_config->baud_rate << 5) | (p_config->air_data_rate);
-    command[6] = (p_config->payload_size << 6) | (p_config->rssi_ambient_noise_flag << 5) |
-                 (p_config->transmitting_power);
-    command[7] = p_config->own_channel;
-    command[8] = (p_config->rssi_byte_flag << 7) | (p_config->transmission_method_type << 6) |
-                 (p_config->wor_cycle);
-    command[9] = p_config->encryption_key >> 8;
-    command[10] = p_config->encryption_key & 0xff;
-
-    LORA_PRINTF("# Command Request\n");
-    for (size_t i = 0; i < sizeof(command); i++) {
-        LORA_PRINTF("0x%02x ", command[i]);
-    }
-    LORA_PRINTF("\n");
-
-    p_uart->p_api->write(p_uart->p_ctrl, command, sizeof(command));
-    tk_dly_tsk(100);
-
-    while (lora_available(p_handle) && response_len < sizeof(response)) {
-        response[response_len++] = lora_read(p_handle);
+    // 設定を書き込む
+    ER err = lora_write_config(p_handle, p_config); // (0xC0コマンドを送信する内部関数)
+    if (err != E_OK) {
+        LORA_PRINTF("LoRa_InitModule: Failed to write config.\n");
+        return -1;
     }
 
-    LORA_PRINTF("# Command Response\n");
-    for (size_t i = 0; i < response_len; i++) {
-        LORA_PRINTF("0x%02x ", response[i]);
-    }
-    LORA_PRINTF("\n");
+    // 成功したら、ハンドルに「現在の設定」として保存
+    memcpy(&p_handle->current_config, p_config, sizeof(LoraConfigItem_t));
 
-    if (response_len != sizeof(command)) {
-        ret = 1;
-    } else {
-        // 成功したら、ハンドルに「現在の設定」として保存
-        memcpy(&p_handle->current_config, p_config, sizeof(LoraConfigItem_t));
-    }
-    return ret;
+    LORA_PRINTF("LoRa_InitModule: Configuration updated.\n");
+    return 0;
 }
 
 #define POST_RECEIVE_TIMEOUT_MS_DEFAULT 5
