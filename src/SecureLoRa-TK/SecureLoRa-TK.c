@@ -3,6 +3,9 @@
 #include <string.h>
 #include <tm/tmonitor.h>
 
+// Configuration Mode 時の Baudrate
+#define LORA_CONFIGURATION_MODE_UART_BPS 9600
+
 // デバッグ出力用マクロ
 #define LORA_PRINTF(...) tm_printf((UB*)__VA_ARGS__)
 
@@ -253,6 +256,21 @@ int get_time_on_air_msec(LoraAirDateRate_t air_data_rate, LoraPayloadSize_t payl
     }
 }
 
+// LoraUartBaudRate_t (enum) を FSPのボーレート値 (uint32_t) に変換する
+uint32_t lora_enum_to_fsp_baud(LoraUartBaudRate_t rate_enum) {
+    switch (rate_enum) {
+        case LORA_UART_BAUD_RATE_1200_BPS: return 1200;
+        case LORA_UART_BAUD_RATE_2400_BPS: return 2400;
+        case LORA_UART_BAUD_RATE_4800_BPS: return 4800;
+        case LORA_UART_BAUD_RATE_9600_BPS: return 9600;
+        case LORA_UART_BAUD_RATE_19200_BPS: return 19200;
+        case LORA_UART_BAUD_RATE_38400_BPS: return 38400;
+        case LORA_UART_BAUD_RATE_57600_BPS: return 57600;
+        case LORA_UART_BAUD_RATE_115200_BPS: return 115200;
+        default: return 9600;
+    }
+}
+
 static int lora_available(LoraHandle_t *p_handle) {
     return (p_handle->rx_head - p_handle->rx_tail + LORA_RX_BUFFER_SIZE) % LORA_RX_BUFFER_SIZE;
 }
@@ -330,6 +348,14 @@ static ER lora_write_config(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) 
     }
 
     return E_OK; // 書き込み成功
+}
+
+static int lora_set_mcu_baud_rate(LoraHandle_t *p_handle, uint32_t new_baud_rate) {
+    if (NULL != p_handle->hw_config.pf_baud_set_helper) {
+        return p_handle->hw_config.pf_baud_set_helper(p_handle, new_baud_rate);
+    } else {
+        return 0;
+    }
 }
 
 // =====================================
@@ -543,6 +569,9 @@ int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t targ
 }
 
 void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
+    uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
+    lora_set_mcu_baud_rate(p_handle, fsp_baud);
+
     // (M0, M1) = (LOW, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
@@ -550,6 +579,9 @@ void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
 }
 
 void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
+    uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
+    lora_set_mcu_baud_rate(p_handle, fsp_baud);
+
     // (M0, M1) = (HIGH, LOW)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_LOW);
@@ -557,6 +589,9 @@ void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
 }
 
 void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
+    uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
+    lora_set_mcu_baud_rate(p_handle, fsp_baud);
+
     // (M0, M1) = (LOW, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_LOW);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);
@@ -564,6 +599,9 @@ void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
 }
 
 void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
+    // 設定モードは常に9600bps
+    lora_set_mcu_baud_rate(p_handle, LORA_CONFIGURATION_MODE_UART_BPS);
+
     // (M0, M1) = (HIGH, HIGH)
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m0, BSP_IO_LEVEL_HIGH);
     R_IOPORT_PinWrite(&g_ioport_ctrl, p_handle->hw_config.m1, BSP_IO_LEVEL_HIGH);

@@ -19,7 +19,7 @@ typedef enum {
     LORA_UART_BAUD_RATE_19200_BPS  = 0b100, //  19,200bps
     LORA_UART_BAUD_RATE_38400_BPS  = 0b101, //  38,400bps
     LORA_UART_BAUD_RATE_57600_BPS  = 0b110, //  57,600bps
-    LORA_UART_BAUD_RATE_115200_BPS = 0b110, // 115,200bps
+    LORA_UART_BAUD_RATE_115200_BPS = 0b111, // 115,200bps
 } LoraUartBaudRate_t;
 
 typedef enum {
@@ -75,12 +75,20 @@ typedef enum {
     LORA_STATE_WAITING_RX,  // 受信開始(AUX Low)を待っている状態
 } LoraState_t;
 
+struct s_LoraHandle; // LoraHandle_t の前方宣言
+
+// baudrate 設定ヘルパー関数の型を定義
+typedef int (*lora_baud_set_helper_t)(struct s_LoraHandle *p_handle, uint32_t baudrate);
+
 // ハードウェア構成を定義する構造体
 typedef struct {
     uart_instance_t const * p_uart; // UART
     bsp_io_port_pin_t       m0;     // M0
     bsp_io_port_pin_t       m1;     // M1
     bsp_io_port_pin_t       aux;    // AUX
+
+    // baudrate を変更するヘルパー関数のポインタ
+    lora_baud_set_helper_t pf_baud_set_helper;
 } LoraHwConfig_t;
 
 // E220-900T22S(JP)の設定項目
@@ -100,7 +108,7 @@ typedef struct {
 
 // LoRaハンドルの本体（すべての状態を保持）
 #define LORA_RX_BUFFER_SIZE 256
-typedef struct {
+typedef struct s_LoraHandle {
     LoraHwConfig_t hw_config; // ハードウェア構成
 
     LoraConfigItem_t current_config; // 現在の設定
