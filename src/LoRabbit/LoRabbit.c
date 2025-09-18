@@ -1,4 +1,4 @@
-#include "SecureLoRa-TK.h"
+#include "LoRabbit.h"
 #include <stdio.h>
 #include <string.h>
 #include <tm/tmonitor.h>
@@ -20,7 +20,7 @@ void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_
     }
 }
 
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
 void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args) {
     bsp_io_level_t pin_level;
 
@@ -286,7 +286,7 @@ static int lora_read(LoraHandle_t *p_handle) {
 }
 
 static int lora_wait_for_tx_done(const LoraHandle_t *p_handle, const LoraConfigItem_t *p_config) {
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
         tk_dly_tsk(time);
@@ -372,7 +372,7 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     p_handle->rx_head = 0;
     p_handle->rx_tail = 0;
 
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
     // AUXピンが設定されている場合のみセマフォを生成
     if (LORA_PIN_UNDEFINED != p_handle->hw_config.aux) {
         // セマフォ生成パケットを定義
@@ -435,7 +435,7 @@ int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_fra
     int len = 0;
     memset(recv_frame->recv_data, 0x00, sizeof(recv_frame->recv_data));
 
-#if defined(SECURELORA_TK_USE_AUX_IRQ)
+#ifdef LORABBIT_USE_AUX_IRQ
     // AUXピンが未接続の場合は、このイベント駆動の受信はできない
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         LORA_PRINTF((UB*)"# ERROR: LoRa_ReceiveFrame in IRQ mode requires AUX pin.\n");
@@ -547,7 +547,7 @@ int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t targ
       LORA_PRINTF("\n");
 #endif
 
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
     //  送信前にステートを設定 ★★★
     if (LORA_PIN_UNDEFINED != p_handle->hw_config.aux) {
         p_handle->state = LORA_STATE_WAITING_TX;

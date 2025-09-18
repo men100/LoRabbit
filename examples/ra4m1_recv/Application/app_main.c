@@ -1,7 +1,7 @@
 #include <tk/tkernel.h>
 #include <tm/tmonitor.h>
 #include <stdio.h>
-#include <SecureLoRa-TK.h>
+#include <LoRabbit.h>
 #include "r_sci_uart.h"
 
 // FSPで生成されたUARTインスタンス

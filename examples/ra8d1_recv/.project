@@ -44,9 +44,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>SecureLoRa-TK</name>
+			<name>LoRabbit</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/src/SecureLoRa-TK</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/src/LoRabbit</locationURI>
 		</link>
 		<link>
 			<name>mtk3_bsp2</name>

@@ -118,7 +118,7 @@ typedef struct s_LoraHandle {
     volatile uint16_t rx_head;
     volatile uint16_t rx_tail;
 
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
     // 同期用セマフォID
     ID tx_done_sem_id;
     ID rx_start_sem_id;
@@ -187,7 +187,7 @@ void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle);
  */
 void LoRa_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_args);
 
-#ifdef SECURELORA_TK_USE_AUX_IRQ
+#ifdef LORABBIT_USE_AUX_IRQ
 /**
  * @brief LoRa AUX割り込み時に呼び出すべきハンドラ関数
  * @note ユーザーはFSPのコールバック関数の中からこの関数を呼び出す
