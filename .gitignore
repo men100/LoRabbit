@@ -54,5 +54,6 @@
 *.sbd
 *.srec
 .secure_azone
+.settings/
 makefile
 compile_commands.json
