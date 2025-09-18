@@ -12,12 +12,12 @@ static LoraHandle_t s_lora_handle;
 
 void g_uart0_callback(uart_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
-    LoRa_UartCallbackHandler(&s_lora_handle, p_args);
+    LoRabbit_UartCallbackHandler(&s_lora_handle, p_args);
 }
 
 void g_irq0_callback(external_irq_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
-    LoRa_AuxCallbackHandler(&s_lora_handle, p_args);
+    LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
 }
 
 int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
@@ -96,7 +96,7 @@ LOCAL void task_2(INT stacd, void *exinf)
 
     // 通常モードに移行して送信開始
     tm_putstring((UB*)"Switching to Normal Mode.\n");
-    LoRa_SwitchToNormalMode(&s_lora_handle);
+    LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
     while(1) {
         tm_printf((UB*)"task 2\n");
@@ -104,7 +104,7 @@ LOCAL void task_2(INT stacd, void *exinf)
         uint8_t send_buffer[50];
         int len = snprintf((char*)send_buffer, sizeof(send_buffer), "RMC-RA4M1 Packet #%d", counter++);
         tm_printf((UB*)"Sending: %s\n", send_buffer);
-        int result = LoRa_SendFrame(&s_lora_handle, 0x0000, 0, send_buffer, len);
+        int result = LoRabbit_SendFrame(&s_lora_handle, 0x0000, 0, send_buffer, len);
         if (result != 0) {
             tm_printf((UB*)"LoRa_SendFrame failed with code: %d\n", result);
             return;
@@ -132,10 +132,10 @@ EXPORT INT usermain(void)
     };
 
     // LoRaライブラリを初期化
-    LoRa_Init(&s_lora_handle, &lora_hw_config);
+    LoRabbit_Init(&s_lora_handle, &lora_hw_config);
 
     // LoRaモジュールを初期化
-    if (LoRa_InitModule(&s_lora_handle, &s_config) != 0) {
+    if (LoRabbit_InitModule(&s_lora_handle, &s_config) != 0) {
         tm_putstring((UB*)"LoRa Init Failed!\n");
         while(1);
     }

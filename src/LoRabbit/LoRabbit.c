@@ -9,7 +9,7 @@
 // デバッグ出力用マクロ
 #define LORA_PRINTF(...) tm_printf((UB*)__VA_ARGS__)
 
-void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_args) {
+void LoRabbit_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_args) {
     if (UART_EVENT_RX_CHAR == p_args->event) {
         // リングバッファをハンドルから取得する
         uint16_t next_head = (p_handle->rx_head + 1) % LORA_RX_BUFFER_SIZE;
@@ -21,7 +21,7 @@ void LoRa_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_
 }
 
 #ifdef LORABBIT_USE_AUX_IRQ
-void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args) {
+void LoRabbit_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args) {
     bsp_io_level_t pin_level;
 
     // 現在のピンレベルを読み取る
@@ -360,7 +360,7 @@ static int lora_set_mcu_baud_rate(LoraHandle_t *p_handle, uint32_t new_baud_rate
 
 // =====================================
 
-int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
+int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     if (NULL == p_handle || NULL == p_hw_config) {
         return -1;
     }
@@ -406,14 +406,14 @@ int LoRa_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     return 0;
 }
 
-int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
+int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
         return -1; // Not initialized
     }
 
     LORA_PRINTF("switch to configuration mode\n");
-    LoRa_SwitchToConfigurationMode(p_handle);
+    LoRabbit_SwitchToConfigurationMode(p_handle);
     tk_dly_tsk(100);
 
     // 設定を書き込む
@@ -431,7 +431,7 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
 }
 
 #define POST_RECEIVE_TIMEOUT_MS_DEFAULT 5
-int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout) {
+int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout) {
     int len = 0;
     memset(recv_frame->recv_data, 0x00, sizeof(recv_frame->recv_data));
 
@@ -509,7 +509,7 @@ receive_complete:
 #endif
 }
 
-int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size) {
+int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size) {
     int err = 0;
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     const LoraConfigItem_t *p_config = &p_handle->current_config;
@@ -568,7 +568,7 @@ int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t targ
     return 0;
 }
 
-void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
+void LoRabbit_SwitchToNormalMode(LoraHandle_t *p_handle) {
     uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
     lora_set_mcu_baud_rate(p_handle, fsp_baud);
 
@@ -578,7 +578,7 @@ void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle) {
     tk_dly_tsk(100);
 }
 
-void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
+void LoRabbit_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
     uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
     lora_set_mcu_baud_rate(p_handle, fsp_baud);
 
@@ -588,7 +588,7 @@ void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle) {
     tk_dly_tsk(100);
 }
 
-void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
+void LoRabbit_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
     uint32_t fsp_baud = lora_enum_to_fsp_baud(p_handle->current_config.baud_rate);
     lora_set_mcu_baud_rate(p_handle, fsp_baud);
 
@@ -598,7 +598,7 @@ void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle) {
     tk_dly_tsk(100);
 }
 
-void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
+void LoRabbit_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
     // 設定モードは常に9600bps
     lora_set_mcu_baud_rate(p_handle, LORA_CONFIGURATION_MODE_UART_BPS);
 

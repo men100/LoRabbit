@@ -12,12 +12,12 @@ static LoraHandle_t s_lora_handle;
 
 void g_uart0_callback(uart_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
-    LoRa_UartCallbackHandler(&s_lora_handle, p_args);
+    LoRabbit_UartCallbackHandler(&s_lora_handle, p_args);
 }
 
 void g_irq0_callback(external_irq_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
-    LoRa_AuxCallbackHandler(&s_lora_handle, p_args);
+    LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
 }
 
 int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
@@ -95,12 +95,12 @@ LOCAL void task_2(INT stacd, void *exinf)
 
     // 通常モードに移行して受信開始
     tm_putstring((UB*)"Switching to Normal Mode.\n");
-    LoRa_SwitchToNormalMode(&s_lora_handle);
+    LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
     while(1) {
         tm_printf((UB*)"task 2\n");
 
-        if (LoRa_ReceiveFrame(&s_lora_handle, &recv_frame, TMO_FEVR) > 0) {
+        if (LoRabbit_ReceiveFrame(&s_lora_handle, &recv_frame, TMO_FEVR) > 0) {
             tm_printf((UB*)"Received! Length: %d, RSSI: %d dBm\n", recv_frame.recv_data_len, recv_frame.rssi);
             tm_printf((UB*)"Data: %.*s\n", recv_frame.recv_data_len, recv_frame.recv_data);
         }
@@ -126,10 +126,10 @@ EXPORT INT usermain(void)
     };
 
     // LoRaライブラリを初期化
-    LoRa_Init(&s_lora_handle, &lora_hw_config);
+    LoRabbit_Init(&s_lora_handle, &lora_hw_config);
 
     // LoRaモジュールを初期化
-    if (LoRa_InitModule(&s_lora_handle, &s_config) != 0) {
+    if (LoRabbit_InitModule(&s_lora_handle, &s_config) != 0) {
         tm_putstring((UB*)"LoRa Init Failed!\n");
         while(1);
     }

@@ -141,7 +141,7 @@ typedef struct {
  * @param p_hw_config 使用するハードウェアの構成
  * @return 0:成功, -1:失敗
  */
-int LoRa_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config);
+int LoRabbit_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config);
 
 /**
  * @brief LoRaモジュールの設定を行う
@@ -149,7 +149,7 @@ int LoRa_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config);
  * @param p_config LoRa設定値
  * @return 0:成功, 1:失敗, -1:未初期化
  */
-int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config);
+int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config);
 
 /**
  * @brief LoRa受信を行う
@@ -158,7 +158,7 @@ int LoRa_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config);
  * @param timeout [割り込み利用時のみ] 受信開始を待つタイムアウト値(ms)。ポーリング時は無視される。
  * @return 0より大きい:受信データ長, 0:タイムアウト(受信なし), 負:エラー
  */
-int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout);
+int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_frame, TMO timeout);
 
 /**
  * @brief LoRa送信を行う
@@ -169,15 +169,15 @@ int LoRa_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv_fra
  * @param size 送信データサイズ
  * @return 0:成功, 1:失敗
  */
-int LoRa_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size);
+int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size);
 
 /**
  * @brief 各種動作モードへ移行する関数群
  */
-void LoRa_SwitchToNormalMode(LoraHandle_t *p_handle);
-void LoRa_SwitchToWORSendingMode(LoraHandle_t *p_handle);
-void LoRa_SwitchToWORReceivingMode(LoraHandle_t *p_handle);
-void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle);
+void LoRabbit_SwitchToNormalMode(LoraHandle_t *p_handle);
+void LoRabbit_SwitchToWORSendingMode(LoraHandle_t *p_handle);
+void LoRabbit_SwitchToWORReceivingMode(LoraHandle_t *p_handle);
+void LoRabbit_SwitchToConfigurationMode(LoraHandle_t *p_handle);
 
 /**
  * @brief UART割り込み時に呼び出すべきハンドラ関数
@@ -185,7 +185,7 @@ void LoRa_SwitchToConfigurationMode(LoraHandle_t *p_handle);
  * @param p_handle 該当するLoRaハンドル
  * @param p_args FSPコールバックから渡される引数
  */
-void LoRa_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_args);
+void LoRabbit_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_args);
 
 #ifdef LORABBIT_USE_AUX_IRQ
 /**
@@ -194,5 +194,5 @@ void LoRa_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *p_ar
  * @param p_handle 該当するLoRaハンドル
  * @param p_args FSPコールバックから渡される引数
  */
-void LoRa_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args);
+void LoRabbit_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args);
 #endif
