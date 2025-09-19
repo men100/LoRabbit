@@ -196,3 +196,35 @@ void LoRabbit_UartCallbackHandler(LoraHandle_t *p_handle, uart_callback_args_t *
  */
 void LoRabbit_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_args_t *p_args);
 #endif
+
+/**
+ * @brief パケットを超えるようなデータを分割して送信する。処理が完了するまでブロックする。
+ * @param p_handle 操作対象のハンドル
+ * @param target_address 送信先アドレス
+ * @param target_channel 送信先チャンネル
+ * @param p_data 送信するデータが格納されたバッファ
+ * @param size 送信するデータのサイズ (最大 約47KB)
+ * @param request_ack ACKを要求するかどうか (true: 信頼性通信, false: 高速通信)
+ * @return 0:成功, E_SZOVER:サイズ超過, E_TMOUT:ACKタイムアウト, その他負値:エラー
+ */
+int LoRabbit_SendData(LoraHandle_t *p_handle,
+                           uint16_t target_address,
+                           uint8_t target_channel,
+                           uint8_t *p_data,
+                           uint32_t size,
+                           bool request_ack);
+
+/**
+ * @brief 分割されたデータを受信し、一つのデータに復元する。処理が完了するまでブロックする。
+ * @param p_handle 操作対象のハンドル
+ * @param p_buffer 受信データを書き出すバッファ
+ * @param buffer_size p_bufferの最大サイズ
+ * @param p_received_size 実際に受信したデータのサイズを格納するポインタ
+ * @param timeout 最初のパケットを待つ最大時間(ms)。TMO_FEVRで無限待ち。
+ * @return 0:成功, E_SZOVER:バッファサイズ不足, E_TMOUT:タイムアウト, その他負値:エラー
+ */
+int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
+                              uint8_t *p_buffer,
+                              uint32_t buffer_size,
+                              uint32_t *p_received_size,
+                              TMO timeout);
