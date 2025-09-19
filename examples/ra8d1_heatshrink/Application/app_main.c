@@ -11,6 +11,7 @@
 heatshrink_encoder hse;
 heatshrink_decoder hsd;
 
+// 圧縮・伸長用のバッファ
 uint8_t compressed_buf[256];
 uint8_t decompressed_buf[256];
 
@@ -23,7 +24,6 @@ int heatshrink_encode_and_decode(void) {
     LOG("Original size: %u bytes\n", original_data_size);
     LOG("Original data: \"%s\"\n", original_data_str);
 
-    // 圧縮・伸張用のバッファをスタックに準備
     memset(compressed_buf, 0, sizeof(compressed_buf));
     memset(decompressed_buf, 0, sizeof(decompressed_buf));
 
