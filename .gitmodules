@@ -1,3 +1,6 @@
 [submodule "mtk3_bsp2"]
 	path = mtk3_bsp2
 	url = https://github.com/tron-forum/mtk3_bsp2
+[submodule "external/heatshrink"]
+	path = external/heatshrink
+	url = https://github.com/men100/heatshrink
