@@ -2,12 +2,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <tm/tmonitor.h>
+#include <heatshrink_encoder.h>
+#include <heatshrink_decoder.h>
 
 // Configuration Mode 時の Baudrate
 #define LORA_CONFIGURATION_MODE_UART_BPS 9600
 
 // デバッグ出力用マクロ
 #define LORA_PRINTF(...) tm_printf((UB*)__VA_ARGS__)
+
+// heatshrink encoder & decoder
+static heatshrink_encoder s_hse;
+static heatshrink_decoder s_hsd;
 
 void LoRabbit_UartCallbackHandler(LoraHandle_t * p_handle, uart_callback_args_t * p_args) {
     if (UART_EVENT_RX_CHAR == p_args->event) {
@@ -822,4 +828,147 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         *p_received_size = written_size;
     }
     return 0;
+}
+
+int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
+                                uint16_t target_address,
+                                uint8_t target_channel,
+                                uint8_t *p_data,
+                                uint32_t size,
+                                bool request_ack,
+                                uint8_t *p_work_buffer,
+                                uint32_t work_buffer_size)
+{
+    // ワークバッファのサイズが十分かチェック
+    // (heatshrinkは稀にデータサイズが増えるため、少しマージンを見るのが安全)
+    if (work_buffer_size < size) {
+        return -1;
+    }
+
+    uint32_t compressed_size = 0;
+
+    // 圧縮処理
+    heatshrink_encoder_reset(&s_hse);
+
+    size_t total_sunk = 0;
+    size_t total_polled = 0;
+
+    while (total_sunk < size) {
+        size_t sunk_count = 0;
+
+        // 入力データをエンコーダに渡す
+        heatshrink_encoder_sink(&s_hse, &p_data[total_sunk], size - total_sunk, &sunk_count);
+        total_sunk += sunk_count;
+
+        // 圧縮されたデータを出力バッファに取り出す
+        HSE_poll_res pres;
+        do {
+            size_t polled_count = 0;
+
+            // p_work_buffer に書き出す
+            pres = heatshrink_encoder_poll(&s_hse, &p_work_buffer[total_polled], work_buffer_size - total_polled, &polled_count);
+            total_polled += polled_count;
+        } while (pres == HSER_POLL_MORE);
+    }
+
+    // 最後のデータを強制的に出力
+    HSE_finish_res fres;
+    do {
+        size_t polled_count = 0;
+        fres = heatshrink_encoder_finish(&s_hse);
+        if (fres == HSER_FINISH_MORE) {
+            heatshrink_encoder_poll(&s_hse, &p_work_buffer[total_polled], work_buffer_size - total_polled, &polled_count);
+            total_polled += polled_count;
+        }
+    } while (fres == HSER_FINISH_MORE);
+
+    // 最終的な圧縮サイズを更新
+    compressed_size = total_polled;
+
+    LORA_PRINTF("Original size: %lu, Compressed size: %lu\n", size, compressed_size);
+
+    // 圧縮したデータを、既存の大容量伝送関数で送信
+    return LoRabbit_SendData(p_handle,
+                             target_address,
+                             target_channel,
+                             p_work_buffer,   // 圧縮済みデータを渡す
+                             compressed_size, // 圧縮後のサイズを渡す
+                             request_ack);
+}
+
+int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
+                                   uint8_t *p_buffer,
+                                   uint32_t buffer_size,
+                                   uint32_t *p_received_size,
+                                   TMO timeout,
+                                   uint8_t *p_work_buffer,
+                                   uint32_t work_buffer_size)
+{
+    uint32_t compressed_size = 0;
+
+    // 既存の大容量受信関数で、圧縮されたデータを受信する
+    int result = LoRabbit_ReceiveData(p_handle,
+                                      p_work_buffer,
+                                      work_buffer_size,
+                                      &compressed_size,
+                                      timeout);
+    if (result != 0) {
+        return result; // エラーまたはタイムアウト
+    }
+
+    if (p_received_size) {
+        *p_received_size = 0;
+    }
+
+    // 伸長処理
+    heatshrink_decoder_reset(&s_hsd);
+
+    size_t total_sunk = 0;
+    size_t total_polled = 0;
+
+    while (total_sunk < compressed_size) {
+        size_t sunk_count = 0;
+
+        // 受信した圧縮データをデコーダに渡す
+        heatshrink_decoder_sink(&s_hsd, &p_work_buffer[total_sunk], compressed_size - total_sunk, &sunk_count);
+        total_sunk += sunk_count;
+
+        // 伸長されたデータを出力バッファ(p_buffer)に取り出す
+        HSD_poll_res pres;
+        do {
+            size_t polled_count = 0;
+            // バッファに空きがある場合のみpollを呼ぶ
+            if (total_polled < buffer_size) {
+                pres = heatshrink_decoder_poll(&s_hsd, &p_buffer[total_polled], buffer_size - total_polled, &polled_count);
+                total_polled += polled_count;
+            } else {
+                // バッファが満杯になったら、pollせずにループを抜ける
+                pres = HSDR_POLL_EMPTY;
+            }
+        } while (pres == HSDR_POLL_MORE);
+    }
+
+    HSD_finish_res fres;
+    do {
+        fres = heatshrink_decoder_finish(&s_hsd);
+        if (fres == HSDR_FINISH_MORE) {
+            // バッファが満杯なのに、まだ出力データがある場合はオーバーフロー
+            if (total_polled >= buffer_size) {
+                return -1;
+            }
+            size_t polled_count = 0;
+            heatshrink_decoder_poll(&s_hsd, &p_buffer[total_polled], buffer_size - total_polled, &polled_count);
+            total_polled += polled_count;
+        }
+    } while (fres == HSDR_FINISH_MORE);
+
+    if (fres == HSDR_FINISH_DONE) {
+        LORA_PRINTF("Compressed size: %lu, Original size: %lu\n", compressed_size, total_polled);
+        if (p_received_size) {
+            *p_received_size = total_polled; // 最終的な伸長サイズ
+        }
+        return 0; // 成功
+    } else {
+        return E_IO; // 伸長エラー
+    }
 }
