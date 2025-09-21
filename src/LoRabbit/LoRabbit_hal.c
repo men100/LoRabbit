@@ -1,11 +1,10 @@
 #include "LoRabbit.h"
+#include "LoRabbit_hal.h"
 #include "LoRabbit_config.h"
 #include "LoRabbit_internal.h"
 #include <stdio.h>
 #include <string.h>
 #include <tm/tmonitor.h>
-#include <heatshrink_encoder.h>
-#include <heatshrink_decoder.h>
 
 // Configuration Mode 時の Baudrate
 #define LORA_CONFIGURATION_MODE_UART_BPS 9600
