@@ -12,4 +12,4 @@
 // #define LORABBIT_USE_AUX_IRQ
 
 // デバッグモードの有効/無効
-#define LORABBIT_DEBUG_MODE
+// #define LORABBIT_DEBUG_MODE
