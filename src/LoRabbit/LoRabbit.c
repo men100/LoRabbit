@@ -1,4 +1,6 @@
 #include "LoRabbit.h"
+#include "LoRabbit_config.h"
+#include "LoRabbit_internal.h"
 #include <stdio.h>
 #include <string.h>
 #include <tm/tmonitor.h>
@@ -7,9 +9,6 @@
 
 // Configuration Mode 時の Baudrate
 #define LORA_CONFIGURATION_MODE_UART_BPS 9600
-
-// デバッグ出力用マクロ
-#define LORA_PRINTF(...) tm_printf((UB*)__VA_ARGS__)
 
 // heatshrink encoder & decoder
 static heatshrink_encoder s_hse;
@@ -618,8 +617,6 @@ void LoRabbit_SwitchToConfigurationMode(LoraHandle_t *p_handle) {
 #define LORABBIT_TP_HEADER_SIZE      8
 #define LORABBIT_TP_MAX_PAYLOAD      (197 - LORABBIT_TP_HEADER_SIZE) // 189バイト
 #define LORABBIT_TP_MAX_TOTAL_SIZE   (255 * LORABBIT_TP_MAX_PAYLOAD) // 48,195バイト
-#define LORABBIT_TP_RETRY_COUNT      3
-#define LORABBIT_TP_ACK_TIMEOUT_MS   2000 // ACKパケットの受信待機タイムアウト
 
 // コントロールバイトのフラグ定義
 #define LORABBIT_TP_FLAG_ACK_REQUEST (1 << 7)
