@@ -4,3 +4,6 @@
 [submodule "external/heatshrink"]
 	path = external/heatshrink
 	url = https://github.com/men100/heatshrink
+[submodule "external/Arducam_Mega"]
+	path = external/Arducam_Mega
+	url = https://github.com/men100/Arducam_Mega
