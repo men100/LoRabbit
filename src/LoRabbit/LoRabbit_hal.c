@@ -141,7 +141,7 @@ static int lora_available(LoraHandle_t *p_handle) {
 
 static int lora_read(LoraHandle_t *p_handle) {
     if (p_handle->rx_head == p_handle->rx_tail) {
-        return -1;
+        return LORABBIT_ERROR_UART_READ_FAILED;
     }
 
     uint8_t data = p_handle->rx_buffer[p_handle->rx_tail];
@@ -218,7 +218,7 @@ static int lora_set_mcu_baud_rate(LoraHandle_t *p_handle, uint32_t new_baud_rate
     if (NULL != p_handle->hw_config.pf_baud_set_helper) {
         return p_handle->hw_config.pf_baud_set_helper(p_handle, new_baud_rate);
     } else {
-        return 0;
+        return E_OK;
     }
 }
 
@@ -226,7 +226,7 @@ static int lora_set_mcu_baud_rate(LoraHandle_t *p_handle, uint32_t new_baud_rate
 
 int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     if (NULL == p_handle || NULL == p_hw_config) {
-        return -1;
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
     }
 
     // ハンドルにハードウェア構成をコピー
@@ -250,16 +250,16 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
         p_handle->tx_done_sem_id = tk_cre_sem(&csem);
         if (p_handle->tx_done_sem_id < E_OK) {
             // エラー処理 (IDが負の値で返る)
-            LORA_PRINTF("LoRa_Init: tk_cre_sem failed\n");
-            return -2;
+            LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->tx_done_sem_id);
+            return p_handle->tx_done_sem_id;
         }
 
         // 受信開始用セマフォを生成
         p_handle->rx_start_sem_id = tk_cre_sem(&csem);
         if (p_handle->rx_start_sem_id < E_OK) {
             // エラー処理 (IDが負の値で返る)
-            LORA_PRINTF("LoRa_Init: tk_cre_sem failed\n");
-            return -3;
+            LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
+            return p_handle->rx_start_sem_id;
         }
 
         // ステートを初期化
@@ -267,7 +267,7 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     }
 #endif
 
-    return 0;
+    return E_OK;
 }
 
 int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
@@ -303,7 +303,7 @@ int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv
     // AUXピンが未接続の場合は、このイベント駆動の受信はできない
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         LORA_PRINTF((UB*)"# ERROR: LoRa_ReceiveFrame in IRQ mode requires AUX pin.\n");
-        return -1; // 未サポートエラー
+        return LORABBIT_ERROR_UNSUPPORTED; // 未サポートエラー
     }
 
     // 受信開始前にステートを設定
@@ -313,7 +313,7 @@ int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv
     ER err = tk_wai_sem(p_handle->rx_start_sem_id, 1, timeout);
     if (err != E_OK) {
         p_handle->state = LORA_STATE_IDLE;
-        return (err == E_TMOUT) ? 0 : -1; // タイムアウトなら受信データなし(0)、それ以外はエラー(-1)
+        return (err == E_TMOUT) ? 0 : err; // タイムアウトなら受信データなし(0)、それ以外はエラーを返す
     }
 
     // 受信が開始されたので、UARTバッファからデータを最後まで読み出す
@@ -378,7 +378,7 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     const LoraConfigItem_t *p_config = &p_handle->current_config;
     if (NULL == p_uart || NULL == p_config) {
-        return -1; // Not initialized
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
     }
 
     uint8_t payload_size = 0;
@@ -390,7 +390,7 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
     }
     if (size > payload_size) {
         LORA_PRINTF("send data length too long\n");
-        return 1;
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
     }
 
     uint8_t frame[3 + 197]; // 最大サイズでバッファ確保
@@ -429,7 +429,7 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
         lora_read(p_handle);
     }
 
-    return 0;
+    return E_OK;
 }
 
 int LoRabbit_GetTimeOnAirMsec(LoraAirDateRate_t air_data_rate, uint8_t payload_size_bytes)

@@ -135,5 +135,25 @@ typedef struct {
   int rssi;
 } RecvFrameE220900T22SJP_t;
 
+// LoRabbitライブラリ固有のエラーコード定義
+#define E_LR_BASE (-100) // LoRabbitエラーコードのベース値
+
+typedef enum {
+    // 正常終了は E_OK (0) を使用
+    LORABBIT_OK = E_OK,
+
+    // 独自エラーコード
+    LORABBIT_ERROR_TIMEOUT          = E_TMOUT,       // タイムアウト (μT-Kernel標準)
+    LORABBIT_ERROR_INVALID_ARGUMENT = E_LR_BASE - 0, // (-100) 不正な引数
+    LORABBIT_ERROR_UNSUPPORTED      = E_LR_BASE - 1, // (-101) 未サポート
+    LORABBIT_ERROR_UART_READ_FAILED = E_LR_BASE - 2, // (-102) LoRa モジュールから正しく読み出せない
+    LORABBIT_ERROR_BUFFER_OVERFLOW  = E_LR_BASE - 3, // (-103) バッファサイズ不足
+    LORABBIT_ERROR_INVALID_PACKET   = E_LR_BASE - 4, // (-104) 不正なパケット
+    LORABBIT_ERROR_ACK_FAILED       = E_LR_BASE - 5, // (-105) ACK受信失敗
+    LORABBIT_ERROR_COMPRESS_FAILED  = E_LR_BASE - 6, // (-106) 圧縮失敗
+    LORABBIT_ERROR_DECOMPRESS_FAILED= E_LR_BASE - 7, // (-107) 伸長失敗
+    // ...
+} LoRabbit_Status_t;
+
 #include "LoRabbit_hal.h"
 #include "LoRabbit_tp.h"

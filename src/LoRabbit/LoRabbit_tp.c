@@ -70,7 +70,7 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
                            bool request_ack)
 {
     if (size > LORABBIT_TP_MAX_TOTAL_SIZE) {
-        return -1; // サイズ超過
+        return LORABBIT_ERROR_INVALID_ARGUMENT; // サイズ超過
     }
 
     static uint8_t transaction_id_counter = 0;
@@ -129,12 +129,12 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
         } // retry loop
 
         if (!ack_received) {
-            return E_TMOUT; // ACKタイムアウト
+            return LORABBIT_ERROR_ACK_FAILED; // ACKタイムアウト
         }
         sent_size += packet_buffer[7]; // payload_len
     } // main loop
 
-    return 0; // 成功
+    return E_OK; // 成功
 }
 
 int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
@@ -154,18 +154,18 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
     // 最初のパケットを待つ
     int recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, timeout);
     if (recv_len <= 0) {
-        return (recv_len == 0) ? E_TMOUT : E_SYS; // タイムアウト or エラー
+        return (recv_len == 0) ? LORABBIT_ERROR_TIMEOUT : LORABBIT_ERROR_INVALID_PACKET; // タイムアウト or エラー
     }
     lora_parse_header(frame.recv_data, &header);
 
     // 最初のパケットが正当かチェック
     if ((header.control_byte & LORABBIT_TP_FLAG_IS_ACK) || header.packet_index != 0) {
-        return E_IO; // 不正なパケット
+        return LORABBIT_ERROR_INVALID_PACKET; // 不正なパケット
     }
 
     // バッファサイズをチェック
     if ((uint32_t)header.total_packets * LORABBIT_TP_MAX_PAYLOAD > buffer_size) {
-        return -1; // バッファサイズ不足
+        return LORABBIT_ERROR_BUFFER_OVERFLOW; // バッファサイズ不足
     }
 
     // 最初のパケットを処理
@@ -180,7 +180,7 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         if(p_received_size) {
             *p_received_size = written_size;
         }
-        return 0; // 1パケットで完了
+        return E_OK; // 1パケットで完了
     }
 
     // 残りのパケットを受信
@@ -188,7 +188,7 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         // パケット間のタイムアウトは短く設定
         recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, LORABBIT_TP_ACK_TIMEOUT_MS);
         if (recv_len <= 0) {
-            return E_TMOUT;
+            return LORABBIT_ERROR_TIMEOUT;
         }
 
         LoRabbitTP_Header_t subsequent_header;
@@ -201,7 +201,7 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         {
             // 不正なパケットは無視してタイムアウトまで待機を続けることもできるが、
             // ここではシンプルにエラーとして終了
-            return E_IO;
+            return LORABBIT_ERROR_INVALID_PACKET;
         }
 
         // データをバッファにコピー
@@ -215,17 +215,20 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
 
         // 伝送完了チェック
         if (subsequent_header.control_byte & LORABBIT_TP_FLAG_EOT) {
-            if(p_received_size) *p_received_size = written_size;
-            return 0; // 完了
+            if(p_received_size) {
+                *p_received_size = written_size;
+            }
+            return E_OK; // 完了
         }
     }
 
     if (p_received_size) {
         *p_received_size = written_size;
     }
-    return 0;
+    return E_OK;
 }
 
+// TODO: heatshrink のエラーコードチェック
 int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
                                 uint16_t target_address,
                                 uint8_t target_channel,
@@ -238,7 +241,7 @@ int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
     // ワークバッファのサイズが十分かチェック
     // (heatshrinkは稀にデータサイズが増えるため、少しマージンを見るのが安全)
     if (work_buffer_size < size) {
-        return -1;
+        return LORABBIT_ERROR_BUFFER_OVERFLOW;
     }
 
     uint32_t compressed_size = 0;
@@ -292,6 +295,7 @@ int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
                              request_ack);
 }
 
+// TODO: heatshrink のエラーコードチェック
 int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
                                    uint8_t *p_buffer,
                                    uint32_t buffer_size,
@@ -350,7 +354,7 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
         if (fres == HSDR_FINISH_MORE) {
             // バッファが満杯なのに、まだ出力データがある場合はオーバーフロー
             if (total_polled >= buffer_size) {
-                return -1;
+                return LORABBIT_ERROR_BUFFER_OVERFLOW;
             }
             size_t polled_count = 0;
             heatshrink_decoder_poll(&s_hsd, &p_buffer[total_polled], buffer_size - total_polled, &polled_count);
@@ -363,8 +367,8 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
         if (p_received_size) {
             *p_received_size = total_polled; // 最終的な伸長サイズ
         }
-        return 0; // 成功
+        return E_OK; // 成功
     } else {
-        return E_IO; // 伸長エラー
+        return LORABBIT_ERROR_DECOMPRESS_FAILED; // 伸長エラー
     }
 }

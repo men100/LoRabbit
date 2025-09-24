@@ -32,7 +32,7 @@ int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv
  * @param target_channel 送信先チャンネル
  * @param p_send_data 送信データ
  * @param size 送信データサイズ
- * @return 0:成功, 1:失敗
+ * @return E_OK:成功, エラーコード:失敗
  */
 int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size);
 
