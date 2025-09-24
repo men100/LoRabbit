@@ -37,6 +37,14 @@ int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv
 int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size);
 
 /**
+ * @brief LoRaパケットの空中占有時間(Time on Air)を計算する
+ * @param air_data_rate 使用する空中データレート
+ * @param payload_size_bytes ペイロードのバイト数
+ * @return 計算された時間 (ミリ秒)
+ */
+int LoRabbit_GetTimeOnAirMsec(LoraAirDateRate_t air_data_rate, uint8_t payload_size_bytes);
+
+/**
  * @brief 各種動作モードへ移行する関数群
  */
 void LoRabbit_SwitchToNormalMode(LoraHandle_t *p_handle);
