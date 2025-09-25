@@ -42,6 +42,7 @@
 
 # e2 studio related files
 *.elf
+*.hex
 *.in
 *.init
 *.jlink
