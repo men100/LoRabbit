@@ -267,6 +267,27 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
     }
 #endif
 
+    // encoder, decoder 用 mutex
+    T_CSEM csem_mutex;
+    csem_mutex.exinf = 0;                    // 拡張情報 (未使用)
+    csem_mutex.sematr = TA_TFIFO | TA_FIRST; // FIFO順の待機キュー
+    csem_mutex.isemcnt = 1,                  // 初期セマフォカウント
+    csem_mutex.maxsem = 1;                   // 最大セマフォカウント (バイナリセマフォ)
+
+    // エンコーダ用ミューテックス
+    p_handle->encoder_mutex_id = tk_cre_sem(&csem_mutex);
+    if (p_handle->encoder_mutex_id < E_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
+        return p_handle->encoder_mutex_id;
+    }
+
+    // デコーダ用ミューテックス
+    p_handle->decoder_mutex_id = tk_cre_sem(&csem_mutex);
+    if (p_handle->decoder_mutex_id < E_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
+        return p_handle->decoder_mutex_id;
+    }
+
     return E_OK;
 }
 

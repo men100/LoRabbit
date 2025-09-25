@@ -126,6 +126,10 @@ typedef struct s_LoraHandle {
     // 内部状態
     volatile LoraState_t state;
 #endif
+
+    // encoder, decoder 用 mutex
+    ID encoder_mutex_id;
+    ID decoder_mutex_id;
 } LoraHandle_t;
 
 // 受信フレーム構造体

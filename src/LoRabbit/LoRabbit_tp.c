@@ -238,6 +238,13 @@ int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
                                 uint8_t *p_work_buffer,
                                 uint32_t work_buffer_size)
 {
+    // エンコーダ用ミューテックスをロック
+    ER err = tk_wai_sem(p_handle->encoder_mutex_id, 1, TMO_FEVR);
+    if (err != E_OK) {
+        LORA_PRINTF("LoRabbit_SendCompressedData: tk_wai_sem failed(%d)\n", err);
+        return err;
+    }
+
     // ワークバッファのサイズが十分かチェック
     // (heatshrinkは稀にデータサイズが増えるため、少しマージンを見るのが安全)
     if (work_buffer_size < size) {
@@ -286,6 +293,9 @@ int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
 
     LORA_PRINTF("Original size: %lu, Compressed size: %lu\n", size, compressed_size);
 
+    // エンコーダ用ミューテックスをアンロック
+    tk_sig_sem(p_handle->encoder_mutex_id, 1);
+
     // 圧縮したデータを、既存の大容量伝送関数で送信
     return LoRabbit_SendData(p_handle,
                              target_address,
@@ -304,6 +314,12 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
                                    uint8_t *p_work_buffer,
                                    uint32_t work_buffer_size)
 {
+    // デコーダ用ミューテックスをロック
+    ER err = tk_wai_sem(p_handle->decoder_mutex_id, 1, TMO_FEVR);
+    if (err != E_OK) {
+        return err;
+    }
+
     uint32_t compressed_size = 0;
 
     // 既存の大容量受信関数で、圧縮されたデータを受信する
@@ -371,4 +387,7 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
     } else {
         return LORABBIT_ERROR_DECOMPRESS_FAILED; // 伸長エラー
     }
+
+    // デコーダ用ミューテックスをアンロック
+    tk_sig_sem(p_handle->decoder_mutex_id, 1);
 }
