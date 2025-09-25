@@ -428,3 +428,89 @@ void tglib_draw_string_scaled(const char *str, UW posX, UW posY, UH color, UW sc
         str++;
     }
 }
+
+/**
+ * @brief Draws a buffer of RGB565 pixels onto the screen.
+ *
+ * @param buffer    Pointer to the source buffer containing RGB565 pixel data.
+ * @param posX      X-coordinate of the top-left corner on the screen.
+ * @param posY      Y-coordinate of the top-left corner on the screen.
+ * @param width     Width of the source buffer.
+ * @param height    Height of the source buffer.
+ */
+void tglib_draw_buffer(const UH *buffer, UW posX, UW posY, UW width, UW height)
+{
+    // 描画開始/終了座標を計算
+    UW x_start = posX;
+    UW y_start = posY;
+    UW x_end   = posX + width;
+    UW y_end   = posY + height;
+
+    // 描画領域が完全に画面外の場合は何もしない
+    if (x_start >= max_x || y_start >= max_y) {
+        return;
+    }
+
+    // 画面の右端/下端からはみ出す部分をカット
+    if (x_end > max_x) {
+        x_end = max_x;
+    }
+    if (y_end > max_y) {
+        y_end = max_y;
+    }
+
+    // 実際に描画する幅を再計算
+    UW copy_width = x_end - x_start;
+
+    TLIBLCD_LOCK
+
+    // 描画領域の各行をループ
+    for (UW y = y_start; y < y_end; y++) {
+        // コピー元バッファの現在行の先頭ポインタを計算
+        // (y - posY) で、元のバッファの何行目かを算出するのがポイント
+        const UH *p_src = buffer + ((y - posY) * width);
+
+        // コピー先（フレームバッファ）の現在行の先頭ポインタを計算
+        UH *p_dst = p_frame_buffer + (y * hstride) + x_start;
+
+        // 1行分のピクセルデータをコピー（色反転も適用）
+        for (UW i = 0; i < copy_width; i++) {
+            p_dst[i] = ~p_src[i];
+        }
+    }
+
+    TLIBLCD_UNLOCK
+}
+
+/**
+ * @brief Draws a buffer of RGB565 pixels onto the screen with scaling.
+ *
+ * @param buffer    Pointer to the source buffer containing RGB565 pixel data.
+ * @param posX      X-coordinate of the top-left corner on the screen.
+ * @param posY      Y-coordinate of the top-left corner on the screen.
+ * @param width     Width of the source buffer.
+ * @param height    Height of the source buffer.
+ * @param scale     Scaling factor (e.g., 2 for double size).
+ */
+void tglib_draw_buffer_scaled(const UH *buffer, UW posX, UW posY, UW width, UW height, UW scale)
+{
+    // 拡大率が0の場合は何もしない
+    if (scale == 0) {
+        return;
+    }
+
+    TLIBLCD_LOCK
+
+    // 元バッファの各ピクセルをループ
+    for (UW y = 0; y < height; y++) {
+        for (UW x = 0; x < width; x++) {
+            // 元バッファから1ピクセルの色を取得
+            UH pixel_color = buffer[y * width + x];
+
+            // 拡大後の座標を計算し、scale x scale の矩形を描画
+            draw_rect(pixel_color, posX + (x * scale), posY + (y * scale), scale, scale);
+        }
+    }
+
+    TLIBLCD_UNLOCK
+}

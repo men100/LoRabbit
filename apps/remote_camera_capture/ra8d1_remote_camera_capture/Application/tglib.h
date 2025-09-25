@@ -42,6 +42,9 @@ void tglib_draw_string(const char *str, UW posX, UW posY, UH color);
 void tglib_draw_char_scaled(char character, UW posX, UW posY, UH color, UW scale);
 void tglib_draw_string_scaled(const char *str, UW posX, UW posY, UH color, UW scale);
 
+void tglib_draw_buffer(const UH *buffer, UW posX, UW posY, UW width, UW height);
+void tglib_draw_buffer_scaled(const UH *buffer, UW posX, UW posY, UW width, UW height, UW scale);
+
 #define TLIBLCD_COLOR_BLUE  (0x001F)      // R:0, G:0, B:31
 #define TLIBLCD_COLOR_RED   (0xF800)      // R:31, G:0, B:0
 #define TLIBLCD_COLOR_GREEN (0x07E0)      // R:0, G:63, B:0
