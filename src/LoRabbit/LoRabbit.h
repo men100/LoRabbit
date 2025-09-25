@@ -161,12 +161,13 @@ typedef enum {
     LORABBIT_ERROR_TIMEOUT          = E_TMOUT,       // タイムアウト (μT-Kernel標準)
     LORABBIT_ERROR_INVALID_ARGUMENT = E_LR_BASE - 0, // (-100) 不正な引数
     LORABBIT_ERROR_UNSUPPORTED      = E_LR_BASE - 1, // (-101) 未サポート
-    LORABBIT_ERROR_UART_READ_FAILED = E_LR_BASE - 2, // (-102) LoRa モジュールから正しく読み出せない
-    LORABBIT_ERROR_BUFFER_OVERFLOW  = E_LR_BASE - 3, // (-103) バッファサイズ不足
-    LORABBIT_ERROR_INVALID_PACKET   = E_LR_BASE - 4, // (-104) 不正なパケット
-    LORABBIT_ERROR_ACK_FAILED       = E_LR_BASE - 5, // (-105) ACK受信失敗
-    LORABBIT_ERROR_COMPRESS_FAILED  = E_LR_BASE - 6, // (-106) 圧縮失敗
-    LORABBIT_ERROR_DECOMPRESS_FAILED= E_LR_BASE - 7, // (-107) 伸長失敗
+    LORABBIT_ERROR_WRITE_CONFIG     = E_LR_BASE - 2, // (-102) 設定書き込み失敗
+    LORABBIT_ERROR_UART_READ_FAILED = E_LR_BASE - 3, // (-103) LoRa モジュールから正しく読み出せない
+    LORABBIT_ERROR_BUFFER_OVERFLOW  = E_LR_BASE - 4, // (-104) バッファサイズ不足
+    LORABBIT_ERROR_INVALID_PACKET   = E_LR_BASE - 5, // (-105) 不正なパケット
+    LORABBIT_ERROR_ACK_FAILED       = E_LR_BASE - 6, // (-106) ACK受信失敗
+    LORABBIT_ERROR_COMPRESS_FAILED  = E_LR_BASE - 7, // (-107) 圧縮失敗
+    LORABBIT_ERROR_DECOMPRESS_FAILED= E_LR_BASE - 8, // (-108) 伸長失敗
 } LoRabbit_Status_t;
 
 #include "LoRabbit_hal.h"

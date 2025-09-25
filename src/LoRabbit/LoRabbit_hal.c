@@ -210,7 +210,7 @@ static ER lora_write_config(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) 
 
     // TODO: 詳細チェックを実施する
     if (response_len != sizeof(command) || response[0] != 0xC1) {
-        return E_TMOUT; // 書き込み失敗
+        return LORABBIT_ERROR_WRITE_CONFIG; // 書き込み失敗
     }
 
     return LORABBIT_OK; // 書き込み成功
@@ -302,7 +302,7 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
 int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
     if (NULL == p_uart) {
-        return -1; // Not initialized
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
     }
 
     LORA_PRINTF("switch to configuration mode\n");
@@ -313,14 +313,14 @@ int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
     ER err = lora_write_config(p_handle, p_config); // (0xC0コマンドを送信する内部関数)
     if (err != LORABBIT_OK) {
         LORA_PRINTF("LoRa_InitModule: Failed to write config.\n");
-        return -1;
+        return err;
     }
 
     // 成功したら、ハンドルに「現在の設定」として保存
     memcpy(&p_handle->current_config, p_config, sizeof(LoraConfigItem_t));
 
     LORA_PRINTF("LoRa_InitModule: Configuration updated.\n");
-    return 0;
+    return LORABBIT_OK;
 }
 
 #define POST_RECEIVE_TIMEOUT_MS_DEFAULT 5
