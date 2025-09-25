@@ -53,10 +53,14 @@
       <configSetting altId="p111.output.low" configurationId="p111"/>
       <configSetting altId="p303.output.low" configurationId="p303"/>
       <configSetting altId="p304.output.low" configurationId="p304"/>
+      <configSetting altId="p413.output.high" configurationId="p413"/>
       <configSetting altId="sci0.rxd.p100" configurationId="sci0.rxd" isUsedByDriver="true" peripheral="SCI0"/>
       <configSetting altId="sci0.txd.p101" configurationId="sci0.txd" isUsedByDriver="true" peripheral="SCI0"/>
       <configSetting altId="sci2.rxd.p301" configurationId="sci2.rxd" peripheral="SCI2"/>
       <configSetting altId="sci2.txd.p302" configurationId="sci2.txd" peripheral="SCI2"/>
+      <configSetting altId="spi0.miso.p410" configurationId="spi0.miso" isUsedByDriver="true" peripheral="SPI0"/>
+      <configSetting altId="spi0.mosi.p411" configurationId="spi0.mosi" isUsedByDriver="true" peripheral="SPI0"/>
+      <configSetting altId="spi0.rspck.p412" configurationId="spi0.rspck" isUsedByDriver="true" peripheral="SPI0"/>
     </pincfg>
   </raPinConfiguration>
 </raConfiguration>

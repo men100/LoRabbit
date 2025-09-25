@@ -9,6 +9,10 @@
             [2] = sci_uart_tei_isr, /* SCI0 TEI (Transmit end) */
             [3] = sci_uart_eri_isr, /* SCI0 ERI (Receive error) */
             [4] = r_icu_isr, /* ICU IRQ0 (External pin interrupt 0) */
+            [5] = spi_rxi_isr, /* SPI0 RXI (Receive buffer full) */
+            [6] = spi_txi_isr, /* SPI0 TXI (Transmit buffer empty) */
+            [7] = spi_tei_isr, /* SPI0 TEI (Transmission complete event) */
+            [8] = spi_eri_isr, /* SPI0 ERI (Error) */
         };
         #if BSP_FEATURE_ICU_HAS_IELSR
         const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_NUM_ENTRIES] =
@@ -18,6 +22,10 @@
             [2] = BSP_PRV_VECT_ENUM(EVENT_SCI0_TEI,GROUP2), /* SCI0 TEI (Transmit end) */
             [3] = BSP_PRV_VECT_ENUM(EVENT_SCI0_ERI,GROUP3), /* SCI0 ERI (Receive error) */
             [4] = BSP_PRV_VECT_ENUM(EVENT_ICU_IRQ0,GROUP4), /* ICU IRQ0 (External pin interrupt 0) */
+            [5] = BSP_PRV_VECT_ENUM(EVENT_SPI0_RXI,GROUP5), /* SPI0 RXI (Receive buffer full) */
+            [6] = BSP_PRV_VECT_ENUM(EVENT_SPI0_TXI,GROUP6), /* SPI0 TXI (Transmit buffer empty) */
+            [7] = BSP_PRV_VECT_ENUM(EVENT_SPI0_TEI,GROUP7), /* SPI0 TEI (Transmission complete event) */
+            [8] = BSP_PRV_VECT_ENUM(EVENT_SPI0_ERI,GROUP0), /* SPI0 ERI (Error) */
         };
         #endif
         #endif

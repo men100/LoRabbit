@@ -9,6 +9,7 @@ FSP_HEADER
 #define P105_INT (BSP_IO_PORT_01_PIN_05)
 #define P303_GPIO (BSP_IO_PORT_03_PIN_03)
 #define P304_GPIO (BSP_IO_PORT_03_PIN_04)
+#define P413_SPI0_CS (BSP_IO_PORT_04_PIN_13)
 
 extern const ioport_cfg_t g_bsp_pin_cfg; /* R7FA4M1AB3CFP.pincfg */
 

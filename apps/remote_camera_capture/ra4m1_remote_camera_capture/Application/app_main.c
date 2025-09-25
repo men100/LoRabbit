@@ -3,12 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <LoRabbit.h>
+#include <ArducamCamera.h>
 #include "r_sci_uart.h"
 
 #define LOG(...) tm_printf((UB*)__VA_ARGS__)
 
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart0;
+
+// Camera インスタンス
+ArducamCamera myCamera;
 
 // アプリケーションでLoRaハンドルの実体を定義
 static LoraHandle_t s_lora_handle;
@@ -89,6 +93,23 @@ LOCAL T_CTSK ctsk_2 = {             // Task creation information
 uint8_t send_buffer[BUFFER_SIZE];
 uint8_t work_buffer[BUFFER_SIZE];
 
+void camera_init(void) {
+    // SPI CS (Chip Select) ピン
+    const int cs = P413_SPI0_CS;
+
+    // カメラライブラリを初期化
+    arducamCameraInit(&myCamera, cs);
+
+    if (myCamera.arducamCameraOp->begin(&myCamera) != CAM_ERR_SUCCESS) {
+        LOG("ERROR: Camera initialization failed.\n");
+        while(1); // 初期化に失敗したら停止
+    }
+    LOG("Camera initialization successful.\n");
+
+    // 動作確認として Sensor ID を表示
+    LOG("Sensor ID: 0x%02X (Expected: 0x81 for 5MP, 0x82 for 3MP (legacy models)\n", myCamera.cameraId);
+}
+
 LOCAL void task_1(INT stacd, void *exinf)
 {
     LoRabbit_TransferStatus_t status;
@@ -147,6 +168,9 @@ EXPORT INT usermain(void)
     LOG("Start User-main program.\n");
 
     LOG("LoRa send test\n");
+
+    // カメラライブラリを初期化
+    camera_init();
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {

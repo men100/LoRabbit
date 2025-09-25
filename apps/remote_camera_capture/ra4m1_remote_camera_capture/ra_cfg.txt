@@ -151,10 +151,10 @@ FSP Configuration
       P407 25 - - - - Disabled - - "ADC0: ADTRG; AGT0: AGTIO; CTSU0: TS03; IIC0: SDA; RTC0: RTCOUT; SCI0: CTS_RTS_SS; SLCDC0: SEG11; SPI1: SSL3; USBFS0: VBUS" - なし - - 
       P408 24 - - - - Disabled - - "CTSU0: TS04; GPT5: GTIOCB; IIC0: SCL; IRQ0: IRQ07; OPS0: GTOWLO; SCI1: CTS_RTS_SS; SCI9: RXD_MISO; SCI9: SCL; SLCDC0: SEG10; USBFS0: ID" - なし - - 
       P409 23 - - - - Disabled - - "CTSU0: TS05; GPT5: GTIOCA; IRQ0: IRQ06; OPS0: GTOWUP; SCI9: SDA; SCI9: TXD_MOSI; SLCDC0: SEG09; USBFS0: EXICEN" - なし - - 
-      P410 22 - - - - Disabled - - "AGT1: AGTOB; CTSU0: TS06; GPT6: GTIOCB; IRQ0: IRQ05; OPS0: GTOVLO; SCI0: RXD_MISO; SCI0: SCL; SLCDC0: SEG08; SPI0: MISO" - なし - - 
-      P411 21 - - - - Disabled - - "AGT1: AGTOA; CTSU0: TS07; GPT6: GTIOCA; IRQ0: IRQ04; OPS0: GTOVUP; SCI0: SDA; SCI0: TXD_MOSI; SLCDC0: SEG07; SPI0: MOSI" - なし - - 
-      P412 20 - - - - Disabled - - "SCI0: SCK; SPI0: RSPCK" - なし - - 
-      P413 19 - - - - Disabled - - "SCI0: CTS_RTS_SS; SPI0: SSL0" - なし - - 
+      P410 22 SPI0_MISOA - Low None "Peripheral mode" CMOS None "AGT1: AGTOB; CTSU0: TS06; GPT6: GTIOCB; IRQ0: IRQ05; OPS0: GTOVLO; SCI0: RXD_MISO; SCI0: SCL; SLCDC0: SEG08; SPI0: MISO" - IO - - 
+      P411 21 SPI0_MOSIA - Low None "Peripheral mode" CMOS None "AGT1: AGTOA; CTSU0: TS07; GPT6: GTIOCA; IRQ0: IRQ04; OPS0: GTOVUP; SCI0: SDA; SCI0: TXD_MOSI; SLCDC0: SEG07; SPI0: MOSI" - IO - - 
+      P412 20 SPI0_RSPCKA - Low - "Peripheral mode" CMOS None "SCI0: SCK; SPI0: RSPCK" - IO - - 
+      P413 19 GPIO P413_SPI0_CS Low - "Output mode (Initial High)" CMOS None "SCI0: CTS_RTS_SS; SPI0: SSL0" - IO - - 
       P414 18 - - - - Disabled - - "GPT0: GTIOCB; IRQ0: IRQ09; SPI0: SSL1" - なし - - 
       P415 17 - - - - Disabled - - "GPT0: GTIOCA; IRQ0: IRQ08; SPI0: SSL2" - なし - - 
       P500 76 - - - - Disabled - - "ADC0: AN16; AGT0: AGTOA; CMP0: CMPREF1; GPT2: GTIOCA; OPS0: GTIU; SLCDC0: SEG34; USBFS0: VBUSEN" - なし - - 
@@ -210,6 +210,11 @@ FSP Configuration
   Module "External IRQ (r_icu)"
     Parameter Checking: Default (BSP)
     
+  Module "SPI (r_spi)"
+    Parameter Checking: Default (BSP)
+    Enable Support for using a transfer API: Enabled
+    Enable Transmitting from RXI Interrupt: Disabled
+    
   HAL
     Instance "g_ioport I/O Port (r_ioport)"
       Name: g_ioport
@@ -257,4 +262,29 @@ FSP Configuration
       Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
       Callback: g_irq0_callback
       Pin Interrupt Priority: Priority 13
+      
+    Instance "g_spi0 SPI (r_spi)"
+      Name: g_spi0
+      Channel: 0
+      Receive Interrupt Priority: Priority 12
+      Transmit Buffer Empty Interrupt Priority: Priority 12
+      Transfer Complete Interrupt Priority: Priority 12
+      Error Interrupt Priority: Priority 12
+      Operating Mode: Master
+      Clock Phase: Data sampling on odd edge, data variation on even edge
+      Clock Polarity: Low when idle
+      Mode Fault Error: Disable
+      Bit Order: MSB First
+      Callback: spi_master_handle
+      SPI Mode: Clock Synchronous Operation
+      Full or Transmit Only Mode: Full Duplex
+      Slave Select Polarity: Active Low
+      Select SSL(Slave Select): SSL0
+      MOSI Idle State: MOSI Idle Value Fixing Disable
+      Parity Mode: Disabled
+      Byte Swapping: Disable
+      Bitrate: 4000000
+      Clock Delay: 1 Clock
+      SSL Negation Delay: 1 Clock
+      Next Access Delay: 1 Clock
       
