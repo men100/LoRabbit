@@ -164,7 +164,7 @@ static int lora_wait_for_tx_done(const LoraHandle_t *p_handle, int payload_size)
 
     return err; // LORABBIT_OK:成功, LORABBIT_ERROR_TIMEOUT:タイムアウト
 #else
-    int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
+    int time = LoRabbit_GetTimeOnAirMsec(p_handle->current_config.air_data_rate, payload_size);
     R_BSP_SoftwareDelay(time, BSP_DELAY_UNITS_MILLISECONDS);
     return LORABBIT_OK;
 #endif
