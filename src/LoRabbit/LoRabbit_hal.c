@@ -50,6 +50,7 @@ void LoRabbit_AuxCallbackHandler(LoraHandle_t *p_handle, external_irq_callback_a
 }
 #endif
 
+// air_data_rate から Spreading Factor を返す
 int get_spreading_factor_from_air_data_rate(LoraAirDateRate_t air_data_rate) {
     switch (air_data_rate) {
         case LORA_AIR_DATA_RATE_15625_BPS_SF_5_BW_125:
@@ -89,6 +90,7 @@ int get_spreading_factor_from_air_data_rate(LoraAirDateRate_t air_data_rate) {
     }
 }
 
+// air_data_rate から Bandwidth kHz を返す
 double get_bandwidth_khz_from_air_data_rate(LoraAirDateRate_t air_data_rate) {
     switch (air_data_rate) {
         case LORA_AIR_DATA_RATE_15625_BPS_SF_5_BW_125:
@@ -154,17 +156,17 @@ static int lora_wait_for_tx_done(const LoraHandle_t *p_handle, int payload_size)
     if (LORA_PIN_UNDEFINED == p_handle->hw_config.aux) {
         int time = LoRabbit_GetTimeOnAirMsec(p_handle->current_config.air_data_rate, payload_size);
         tk_dly_tsk(time + 10); // 計算結果に少しマージンを追加して待機
-        return E_OK;
+        return LORABBIT_OK;
     }
 
     // タイムアウトを6秒に設定してセマフォを待つ
     ER err = tk_wai_sem(p_handle->tx_done_sem_id, 1, 6000);
 
-    return err; // E_OK:成功, E_TMOUT:タイムアウト
+    return err; // LORABBIT_OK:成功, LORABBIT_ERROR_TIMEOUT:タイムアウト
 #else
     int time = get_time_on_air_msec(p_config->air_data_rate, p_config->payload_size);
     R_BSP_SoftwareDelay(time, BSP_DELAY_UNITS_MILLISECONDS);
-    return E_OK;
+    return LORABBIT_OK;
 #endif
 }
 
@@ -211,14 +213,14 @@ static ER lora_write_config(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) 
         return E_TMOUT; // 書き込み失敗
     }
 
-    return E_OK; // 書き込み成功
+    return LORABBIT_OK; // 書き込み成功
 }
 
 static int lora_set_mcu_baud_rate(LoraHandle_t *p_handle, uint32_t new_baud_rate) {
     if (NULL != p_handle->hw_config.pf_baud_set_helper) {
         return p_handle->hw_config.pf_baud_set_helper(p_handle, new_baud_rate);
     } else {
-        return E_OK;
+        return LORABBIT_OK;
     }
 }
 
@@ -248,7 +250,7 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
 
         // 送信完了用セマフォを生成
         p_handle->tx_done_sem_id = tk_cre_sem(&csem);
-        if (p_handle->tx_done_sem_id < E_OK) {
+        if (p_handle->tx_done_sem_id < LORABBIT_OK) {
             // エラー処理 (IDが負の値で返る)
             LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->tx_done_sem_id);
             return p_handle->tx_done_sem_id;
@@ -256,7 +258,7 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
 
         // 受信開始用セマフォを生成
         p_handle->rx_start_sem_id = tk_cre_sem(&csem);
-        if (p_handle->rx_start_sem_id < E_OK) {
+        if (p_handle->rx_start_sem_id < LORABBIT_OK) {
             // エラー処理 (IDが負の値で返る)
             LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
             return p_handle->rx_start_sem_id;
@@ -266,29 +268,35 @@ int LoRabbit_Init(LoraHandle_t * p_handle, LoraHwConfig_t const * p_hw_config) {
         p_handle->state = LORA_STATE_IDLE;
     }
 #endif
-
-    // encoder, decoder 用 mutex
     T_CSEM csem_mutex;
     csem_mutex.exinf = 0;                    // 拡張情報 (未使用)
     csem_mutex.sematr = TA_TFIFO | TA_FIRST; // FIFO順の待機キュー
     csem_mutex.isemcnt = 1,                  // 初期セマフォカウント
     csem_mutex.maxsem = 1;                   // 最大セマフォカウント (バイナリセマフォ)
 
+    // 転送状態とミューテックスを初期化
+    memset((void*)&p_handle->transfer_status, 0, sizeof(LoRabbit_TransferStatus_t));
+    p_handle->status_mutex_id = tk_cre_sem(&csem_mutex);
+    if (p_handle->status_mutex_id < LORABBIT_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for status_mutex_id failed(%d)\n", p_handle->status_mutex_id);
+        return p_handle->status_mutex_id;
+    }
+
     // エンコーダ用ミューテックス
     p_handle->encoder_mutex_id = tk_cre_sem(&csem_mutex);
-    if (p_handle->encoder_mutex_id < E_OK) {
-        LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
+    if (p_handle->encoder_mutex_id < LORABBIT_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for encoder_mutex_id failed(%d)\n", p_handle->rx_start_sem_id);
         return p_handle->encoder_mutex_id;
     }
 
     // デコーダ用ミューテックス
     p_handle->decoder_mutex_id = tk_cre_sem(&csem_mutex);
-    if (p_handle->decoder_mutex_id < E_OK) {
-        LORA_PRINTF("LoRa_Init: tk_cre_sem failed(%d)\n", p_handle->rx_start_sem_id);
+    if (p_handle->decoder_mutex_id < LORABBIT_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for decoder_mutex_id failed(%d)\n", p_handle->rx_start_sem_id);
         return p_handle->decoder_mutex_id;
     }
 
-    return E_OK;
+    return LORABBIT_OK;
 }
 
 int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
@@ -303,7 +311,7 @@ int LoRabbit_InitModule(LoraHandle_t *p_handle, LoraConfigItem_t *p_config) {
 
     // 設定を書き込む
     ER err = lora_write_config(p_handle, p_config); // (0xC0コマンドを送信する内部関数)
-    if (err != E_OK) {
+    if (err != LORABBIT_OK) {
         LORA_PRINTF("LoRa_InitModule: Failed to write config.\n");
         return -1;
     }
@@ -332,7 +340,7 @@ int LoRabbit_ReceiveFrame(LoraHandle_t *p_handle, RecvFrameE220900T22SJP_t *recv
 
     // 受信開始(AUX Low)をセマフォで待つ
     ER err = tk_wai_sem(p_handle->rx_start_sem_id, 1, timeout);
-    if (err != E_OK) {
+    if (err != LORABBIT_OK) {
         p_handle->state = LORA_STATE_IDLE;
         return (err == E_TMOUT) ? 0 : err; // タイムアウトなら受信データなし(0)、それ以外はエラーを返す
     }
@@ -450,7 +458,7 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
         lora_read(p_handle);
     }
 
-    return E_OK;
+    return LORABBIT_OK;
 }
 
 int LoRabbit_GetTimeOnAirMsec(LoraAirDateRate_t air_data_rate, uint8_t payload_size_bytes)

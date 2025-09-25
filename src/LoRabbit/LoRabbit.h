@@ -106,6 +106,13 @@ typedef struct {
   uint16_t encryption_key;
 } LoraConfigItem_t;
 
+// 転送状態を示す構造体
+typedef struct {
+    bool     is_active;            // 現在、大容量送受信中か
+    uint8_t  total_packets;        // 今回の転送における全パケット数
+    uint8_t  current_packet_index; // 現在処理中のパケット番号 (0から)
+} LoRabbit_TransferStatus_t;
+
 // LoRaハンドルの本体（すべての状態を保持）
 #define LORA_RX_BUFFER_SIZE 256
 typedef struct s_LoraHandle {
@@ -126,6 +133,10 @@ typedef struct s_LoraHandle {
     // 内部状態
     volatile LoraState_t state;
 #endif
+
+    // 転送状態を保持するメンバと、それを保護する mutex
+    volatile LoRabbit_TransferStatus_t transfer_status;
+    ID status_mutex_id;
 
     // encoder, decoder 用 mutex
     ID encoder_mutex_id;
@@ -156,7 +167,6 @@ typedef enum {
     LORABBIT_ERROR_ACK_FAILED       = E_LR_BASE - 5, // (-105) ACK受信失敗
     LORABBIT_ERROR_COMPRESS_FAILED  = E_LR_BASE - 6, // (-106) 圧縮失敗
     LORABBIT_ERROR_DECOMPRESS_FAILED= E_LR_BASE - 7, // (-107) 伸長失敗
-    // ...
 } LoRabbit_Status_t;
 
 #include "LoRabbit_hal.h"

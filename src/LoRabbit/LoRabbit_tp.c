@@ -62,6 +62,38 @@ static int lora_send_ack(LoraHandle_t *p_handle, LoRabbitTP_Header_t *p_data_hea
     return LoRabbit_SendFrame(p_handle, p_data_header->source_address, p_data_header->source_channel, ack_payload, sizeof(ack_payload));
 }
 
+
+/**
+ * @brief 転送状態を「実行中」に設定するヘルパー
+ */
+static void lora_status_set_active(LoraHandle_t *p_handle, uint8_t total_packets, uint8_t current_index) {
+    tk_wai_sem(p_handle->status_mutex_id, 1, TMO_FEVR);
+    p_handle->transfer_status.is_active = true;
+    p_handle->transfer_status.total_packets = total_packets;
+    p_handle->transfer_status.current_packet_index = current_index;
+    tk_sig_sem(p_handle->status_mutex_id, 1);
+}
+
+/**
+ * @brief 転送状態の進捗を更新するヘルパー
+ */
+static void lora_status_set_progress(LoraHandle_t *p_handle, uint8_t current_index) {
+    tk_wai_sem(p_handle->status_mutex_id, 1, TMO_FEVR);
+    p_handle->transfer_status.current_packet_index = current_index;
+    tk_sig_sem(p_handle->status_mutex_id, 1);
+}
+
+/**
+ * @brief 転送状態を「アイドル」にリセットするヘルパー
+ */
+static void lora_status_set_idle(LoraHandle_t *p_handle) {
+    tk_wai_sem(p_handle->status_mutex_id, 1, TMO_FEVR);
+    p_handle->transfer_status.is_active = false;
+    p_handle->transfer_status.total_packets = 0;
+    p_handle->transfer_status.current_packet_index = 0;
+    tk_sig_sem(p_handle->status_mutex_id, 1);
+}
+
 int LoRabbit_SendData(LoraHandle_t *p_handle,
                            uint16_t target_address,
                            uint8_t target_channel,
@@ -80,7 +112,13 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
     uint8_t packet_buffer[197];
     uint32_t sent_size = 0;
 
+    // 転送開始を記録
+    lora_status_set_active(p_handle, total_packets, 0);
+
     for (uint8_t i = 0; i < total_packets; i++) {
+        // 現在のパケット番号を更新 (iが0の時も呼ばれるが、動作に支障はない)
+        lora_status_set_progress(p_handle, i);
+
         bool ack_received = false;
         for (uint8_t retry = 0; retry < LORABBIT_TP_RETRY_COUNT; retry++) {
             // ヘッダを組み立てる
@@ -129,12 +167,17 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
         } // retry loop
 
         if (!ack_received) {
+            // 転送終了（失敗）を記録
+            lora_status_set_idle(p_handle);
             return LORABBIT_ERROR_ACK_FAILED; // ACKタイムアウト
         }
         sent_size += packet_buffer[7]; // payload_len
     } // main loop
 
-    return E_OK; // 成功
+    // 転送終了（成功）を記録
+    lora_status_set_idle(p_handle);
+
+    return LORABBIT_OK; // 成功
 }
 
 int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
@@ -143,6 +186,7 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
                               uint32_t *p_received_size,
                               TMO timeout)
 {
+    int ret = LORABBIT_OK;
     RecvFrameE220900T22SJP_t frame;
     LoRabbitTP_Header_t header;
     uint32_t written_size = 0;
@@ -151,22 +195,31 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         *p_received_size = 0;
     }
 
+    // 転送開始を記録
+    lora_status_set_active(p_handle, 0, 0); // この時点では総パケット数不明
+
     // 最初のパケットを待つ
     int recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, timeout);
     if (recv_len <= 0) {
-        return (recv_len == 0) ? LORABBIT_ERROR_TIMEOUT : LORABBIT_ERROR_INVALID_PACKET; // タイムアウト or エラー
+        ret = (recv_len == 0) ? LORABBIT_ERROR_TIMEOUT : LORABBIT_ERROR_INVALID_PACKET; // タイムアウト or エラー
+        goto cleanup_and_exit;
     }
     lora_parse_header(frame.recv_data, &header);
 
     // 最初のパケットが正当かチェック
     if ((header.control_byte & LORABBIT_TP_FLAG_IS_ACK) || header.packet_index != 0) {
-        return LORABBIT_ERROR_INVALID_PACKET; // 不正なパケット
+        ret = LORABBIT_ERROR_INVALID_PACKET; // 不正なパケット
+        goto cleanup_and_exit;
     }
 
     // バッファサイズをチェック
     if ((uint32_t)header.total_packets * LORABBIT_TP_MAX_PAYLOAD > buffer_size) {
-        return LORABBIT_ERROR_BUFFER_OVERFLOW; // バッファサイズ不足
+        ret = LORABBIT_ERROR_BUFFER_OVERFLOW; // バッファサイズ不足
+        goto cleanup_and_exit;
     }
+
+    // 状態を更新（総パケット数）
+    lora_status_set_active(p_handle, header.total_packets, 0);
 
     // 最初のパケットを処理
     memcpy(p_buffer, &frame.recv_data[LORABBIT_TP_HEADER_SIZE], header.payload_length);
@@ -180,15 +233,20 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         if(p_received_size) {
             *p_received_size = written_size;
         }
-        return E_OK; // 1パケットで完了
+        ret = LORABBIT_OK; // 1パケットで完了
+        goto cleanup_and_exit;
     }
 
     // 残りのパケットを受信
     for (uint8_t expected_index = 1; expected_index < header.total_packets; expected_index++) {
+        // 状態を更新（現在パケット番号）
+        lora_status_set_progress(p_handle, expected_index);
+
         // パケット間のタイムアウトは短く設定
         recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, LORABBIT_TP_ACK_TIMEOUT_MS);
         if (recv_len <= 0) {
-            return LORABBIT_ERROR_TIMEOUT;
+            ret = LORABBIT_ERROR_TIMEOUT;
+            goto cleanup_and_exit;
         }
 
         LoRabbitTP_Header_t subsequent_header;
@@ -201,7 +259,8 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         {
             // 不正なパケットは無視してタイムアウトまで待機を続けることもできるが、
             // ここではシンプルにエラーとして終了
-            return LORABBIT_ERROR_INVALID_PACKET;
+            ret = LORABBIT_ERROR_INVALID_PACKET;
+            goto cleanup_and_exit;
         }
 
         // データをバッファにコピー
@@ -218,14 +277,20 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
             if(p_received_size) {
                 *p_received_size = written_size;
             }
-            return E_OK; // 完了
+            ret = LORABBIT_OK; // 完了
+            goto cleanup_and_exit;
         }
     }
 
     if (p_received_size) {
         *p_received_size = written_size;
     }
-    return E_OK;
+
+cleanup_and_exit:
+    // 転送終了を記録
+    lora_status_set_idle(p_handle);
+
+    return ret;
 }
 
 // TODO: heatshrink のエラーコードチェック
@@ -240,7 +305,7 @@ int LoRabbit_SendCompressedData(LoraHandle_t *p_handle,
 {
     // エンコーダ用ミューテックスをロック
     ER err = tk_wai_sem(p_handle->encoder_mutex_id, 1, TMO_FEVR);
-    if (err != E_OK) {
+    if (err != LORABBIT_OK) {
         LORA_PRINTF("LoRabbit_SendCompressedData: tk_wai_sem failed(%d)\n", err);
         return err;
     }
@@ -316,7 +381,7 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
 {
     // デコーダ用ミューテックスをロック
     ER err = tk_wai_sem(p_handle->decoder_mutex_id, 1, TMO_FEVR);
-    if (err != E_OK) {
+    if (err != LORABBIT_OK) {
         return err;
     }
 
@@ -383,11 +448,25 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
         if (p_received_size) {
             *p_received_size = total_polled; // 最終的な伸長サイズ
         }
-        return E_OK; // 成功
+        result = LORABBIT_OK; // 成功
     } else {
-        return LORABBIT_ERROR_DECOMPRESS_FAILED; // 伸長エラー
+        result = LORABBIT_ERROR_DECOMPRESS_FAILED; // 伸長エラー
     }
 
     // デコーダ用ミューテックスをアンロック
     tk_sig_sem(p_handle->decoder_mutex_id, 1);
+
+    return result;
+}
+
+int LoRabbit_GetTransferStatus(LoraHandle_t *p_handle, LoRabbit_TransferStatus_t *p_status) {
+    if (NULL == p_handle || NULL == p_status) {
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
+    }
+
+    tk_wai_sem(p_handle->status_mutex_id, 1, TMO_FEVR);
+    memcpy(p_status, (void*)&p_handle->transfer_status, sizeof(LoRabbit_TransferStatus_t));
+    tk_sig_sem(p_handle->status_mutex_id, 1);
+
+    return LORABBIT_OK;
 }

@@ -71,3 +71,11 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
                                    TMO timeout,
                                    uint8_t *p_work_buffer,
                                    uint32_t work_buffer_size);
+
+/**
+ * @brief 現在の大容量データ転送の進捗状況を取得する
+ * @param[in] p_handle 操作対象のハンドル
+ * @param[out] p_status 取得した状態を格納する構造体へのポインタ
+ * @retval LORABBIT_OK 成功
+ */
+int LoRabbit_GetTransferStatus(LoraHandle_t *p_handle, LoRabbit_TransferStatus_t *p_status);
