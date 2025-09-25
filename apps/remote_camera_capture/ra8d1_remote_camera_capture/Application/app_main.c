@@ -1,7 +1,7 @@
 #include <tk/tkernel.h>
 #include <tm/tmonitor.h>
-#include <stdio.h>
 #include <LoRabbit.h>
+#include "tglib.h"
 #include "r_sci_b_uart.h"
 
 // FSPで生成されたUARTインスタンス
@@ -71,50 +71,68 @@ LOCAL T_CTSK ctsk_1 = {				// Task creation information
 	.tskatr		= TA_HLNG | TA_RNG3,
 };
 
-LOCAL void task_2(INT stacd, void *exinf);	// task execution function
-LOCAL ID	tskid_2;			// Task ID number
-LOCAL T_CTSK ctsk_2 = {				// Task creation information
-	.itskpri	= 10,
-	.stksz		= 1024,
-	.task		= task_2,
-	.tskatr		= TA_HLNG | TA_RNG3,
-};
-
 LOCAL void task_1(INT stacd, void *exinf)
 {
-	while(1) {
-		tm_printf((UB*)"task 1\n");
+	UINT	x, y, w, h, dw, dh;
 
-		/* Inverts the LED on the board. */
-		out_h(PORT_PODR(6), in_h(PORT_PODR(6))^(1<<0));     // BLUE
-		out_h(PORT_PODR(4), in_h(PORT_PODR(4))^(1<<14));    // GREEN
-		out_h(PORT_PODR(1), in_h(PORT_PODR(1))^(1<<7));     // RED
+	tm_printf((UB*)"Start task-1\n");
 
-		tk_dly_tsk(1000);
-	}
-}
+	tglib_init();				/* Init LCD */
+	tglib_onoff_lcd(LCD_ON);		/* LCD ON */
 
-LOCAL void task_2(INT stacd, void *exinf)
-{
-    // カウンタ
-    int counter = 0;
-
-    // 通常モードに移行して送信開始
-    tm_putstring((UB*)"Switching to Normal Mode.\n");
-    LoRabbit_SwitchToNormalMode(&s_lora_handle);
+	/* Get display size */
+	w = tglib_get_width();
+	h = tglib_get_height();
+	tm_printf((UB*)"Width:%d  Height:%d\n", w, h);
 
 	while(1) {
-		tm_printf((UB*)"task 2\n");
+		/* Cleare Screen */
+		tglib_clear_scr(TLIBLCD_COLOR_RED);
+		tk_dly_tsk(500);
+		tglib_clear_scr(TLIBLCD_COLOR_GREEN);
+		tk_dly_tsk(500);
+		tglib_clear_scr(TLIBLCD_COLOR_BLUE);
+		tk_dly_tsk(500);
+		tglib_clear_scr(TLIBLCD_COLOR_WHITE);
+		tk_dly_tsk(500);
 
-	    uint8_t send_buffer[50];
-        int len = snprintf((char*)send_buffer, sizeof(send_buffer), "EK-RA8D1 Packet #%d", counter++);
-        tm_printf((UB*)"Sending: %s\n", send_buffer);
-        int result = LoRabbit_SendFrame(&s_lora_handle, 0x0000, 0, send_buffer, len);
-        if (result != 0) {
-            tm_printf((UB*)"LoRa_SendFrame failed with code: %d\n", result);
-            return;
-        }
-		tk_dly_tsk(5000);
+		/* Draw a color bar */
+		x = y = 0; dw = w/10; dh = h/10;
+		while(y<h) {
+			tglib_draw_rect(TLIBLCD_COLOR_RED, x, y, w, dh);
+			y += dh;
+			tglib_draw_rect(TLIBLCD_COLOR_GREEN, x, y, w, dh);
+			y += dh;
+			tglib_draw_rect(TLIBLCD_COLOR_BLUE, x, y, w, dh);
+			y += dh;
+			tglib_draw_rect(TLIBLCD_COLOR_WHITE, x, y, w, dh);
+			y += dh;
+			tglib_draw_rect(TLIBLCD_COLOR_BLACK, x, y, w, dh);
+			y += dh;
+		}
+
+		/* Draw a rectangle */
+		x = w/2 - dw/2; y = h/2 - dh/2; 
+		UINT ww = dw; UINT hh = dh;
+		for(UINT i = 0; i<2; i++) {
+			tglib_draw_rect(TLIBLCD_COLOR_RED, x, y, ww, hh);
+			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
+			tk_dly_tsk(200);
+
+			tglib_draw_rect(TLIBLCD_COLOR_GREEN, x, y, ww, hh);
+			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
+			tk_dly_tsk(200);
+
+			tglib_draw_rect(TLIBLCD_COLOR_BLUE, x, y, ww, hh);
+			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
+			tk_dly_tsk(200);
+
+			tglib_draw_rect(TLIBLCD_COLOR_WHITE, x, y, ww, hh);
+			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
+			tk_dly_tsk(200);
+		}
+
+		tk_dly_tsk(300);
 	}
 }
 
@@ -123,14 +141,7 @@ EXPORT INT usermain(void)
 {
 	tm_putstring((UB*)"Start User-main program.\n");
 
-	/* Turn off the LED on the board. */
-	out_h(PORT_PODR(6), in_h(PORT_PODR(6))&~(1<<0));    // BLUE
-	out_h(PORT_PODR(4), in_h(PORT_PODR(4))&~(1<<14));   // GREEN
-	out_h(PORT_PODR(1), in_h(PORT_PODR(1))&~(1<<7));    // RED
-
-	tm_putstring((UB*)"LoRa send test\n");
-
-	// ハードウェア構成を定義
+    // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {
         .p_uart = &g_uart2,      // FSPで生成されたUARTインスタンス
         .m0     = PMOD2_9_GPIO,  // FSPで定義したM0ピン
@@ -141,10 +152,10 @@ EXPORT INT usermain(void)
         .pf_baud_set_helper = my_sci_b_uart_baud_set_helper,
     };
 
-	// LoRaライブラリを初期化
+    // LoRaライブラリを初期化
     LoRabbit_Init(&s_lora_handle, &lora_hw_config);
 
-	// LoRaモジュールを初期化
+    // LoRaモジュールを初期化
     if (LoRabbit_InitModule(&s_lora_handle, &s_config) != 0) {
         tm_putstring((UB*)"LoRa Init Failed!\n");
         R_IOPORT_PinWrite(&g_ioport_ctrl, USER_LED3_RED, BSP_IO_LEVEL_HIGH);
@@ -155,9 +166,6 @@ EXPORT INT usermain(void)
 	/* Create & Start Tasks */
 	tskid_1 = tk_cre_tsk(&ctsk_1);
 	tk_sta_tsk(tskid_1, 0);
-
-	tskid_2 = tk_cre_tsk(&ctsk_2);
-	tk_sta_tsk(tskid_2, 0);
 
 	tk_slp_tsk(TMO_FEVR);
 

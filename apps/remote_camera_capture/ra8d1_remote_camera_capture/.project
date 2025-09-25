@@ -27,19 +27,12 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>com.renesas.cdt.managedbuild.jsoncdb.compilationdatabase.compilationDatabaseBuilder</name>
-			<triggers>full,incremental,</triggers>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.cdt.core.cnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 		<nature>com.renesas.cdt.ddsc.contentgen.ddscNature</nature>
-		<nature>com.renesas.cdt.managedbuild.jsoncdb.compilationdatabase.CompileCommandsNature</nature>
 		<nature>com.renesas.cdt.ra.contentgen.raNature</nature>
 	</natures>
 	<linkedResources>
@@ -51,7 +44,7 @@
 		<link>
 			<name>heatshrink</name>
 			<type>2</type>
-			<location>D:/dev/git/LoRabbit/external/heatshrink</location>
+			<locationURI>PARENT-3-PROJECT_LOC/external/heatshrink</locationURI>
 		</link>
 		<link>
 			<name>mtk3_bsp2</name>
@@ -61,7 +54,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1758243610029</id>
+			<id>1758247919069</id>
 			<name>heatshrink</name>
 			<type>5</type>
 			<matcher>

@@ -109,7 +109,7 @@
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 11) /* SDHI1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 12) /* SDHI0 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 13) /* DOC */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 15) /* GLCDC/MIPI-DSI/DRW */ | \
+            (((1 > 0) ? 0U : 1U) << 15) /* GLCDC/MIPI-DSI/DRW */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 16) /* CEU */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 26) /* CANFD1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 27) /* CANFD0 */ | \
@@ -124,9 +124,9 @@
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 13) /* POEG1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 14) /* POEG0 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 15) /* ADC121 */ | \
-            (((1 > 0) ? 0U : 1U) << 16) /* ADC120 */ | \
+            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 16) /* ADC120 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 20) /* DAC120 */ | \
-            (((1 > 0) ? 0U : 1U) << 22) /* TSN */ | \
+            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 22) /* TSN */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 27) /* ACMPHS1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 28) /* ACMPHS0 */)
 #endif
@@ -150,7 +150,7 @@
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 28) /* GPT3 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 29) /* GPT2 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 30) /* GPT1 */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 31) /* GPT0 */)
+            (((1 > 0) ? 0U : 1U) << 31) /* GPT0 */)
 #endif
 #ifndef BSP_TZ_CFG_MSSAR
 #define BSP_TZ_CFG_MSSAR (\
@@ -232,7 +232,7 @@
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 0U) /* External IRQ0 */ | \
             (((1 > 0) ? 0U : 1U) << 1U) /* External IRQ1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 2U) /* External IRQ2 */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 3U) /* External IRQ3 */ | \
+            (((1 > 0) ? 0U : 1U) << 3U) /* External IRQ3 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 4U) /* External IRQ4 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 5U) /* External IRQ5 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 6U) /* External IRQ6 */ | \
@@ -356,7 +356,7 @@
 #define BSP_CFG_ROM_REG_OFS1_SEL (0x00000000U)
 #endif
 #endif
-#define BSP_CFG_ROM_REG_OFS1_INITECCEN (0 << 25)
+#define BSP_CFG_ROM_REG_OFS1_INITECCEN (1 << 25)
 #define BSP_CFG_ROM_REG_OFS1 (0xFCFFFED0 | (1 << 3) | (7) | (1 << 5) |  (1 << 8) | (1 << 24) | (BSP_CFG_ROM_REG_OFS1_INITECCEN))
 
 /* Used to create IELS values for the interrupt initialization table g_interrupt_event_link_select. */
@@ -468,7 +468,7 @@
 #endif
 
 #ifndef BSP_CFG_SDRAM_ENABLED
-#define BSP_CFG_SDRAM_ENABLED  (0)
+#define BSP_CFG_SDRAM_ENABLED  (1)
 #endif
 
 #ifndef BSP_CFG_SDRAM_TRAS
@@ -512,7 +512,7 @@
 #endif
 
 #ifndef BSP_CFG_SDRAM_MULTIPLEX_ADDR_SHIFT
-#define BSP_CFG_SDRAM_MULTIPLEX_ADDR_SHIFT  (2)
+#define BSP_CFG_SDRAM_MULTIPLEX_ADDR_SHIFT  (1)
 #endif
 
 #ifndef BSP_CFG_SDRAM_ENDIAN_MODE

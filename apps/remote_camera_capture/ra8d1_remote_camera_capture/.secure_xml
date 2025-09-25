@@ -4,11 +4,11 @@
     <option key="#Board#" value="board.ra8d1ek"/>
     <option key="CPU" value="RA8D1"/>
     <option key="Core" value="CM85"/>
-    <option key="#TargetName#" value="R7FA8D1BHECBD"/>
+    <option key="#TargetName#" value="R7FA8D1BHDCBD"/>
     <option key="#TargetARCHITECTURE#" value="cortex-m85"/>
     <option key="#DeviceCommand#" value="R7FA8D1BH"/>
     <option key="#RTOS#" value="_none"/>
-    <option key="#pinconfiguration#" value="R7FA8D1BHECBD.pincfg"/>
+    <option key="#pinconfiguration#" value="R7FA8D1BHDCBD.pincfg"/>
     <option key="#FSPVersion#" value="5.9.0"/>
     <option key="#ConfigurationFragments#" value="Renesas##BSP##Board##ra8d1_ek##"/>
     <option key="#SELECTED_TOOLCHAIN#" value="gcc-arm-embedded"/>
@@ -46,8 +46,8 @@
     <node id="board.clock.sciclk.source" option="board.clock.sciclk.source.pll1p"/>
     <node id="board.clock.spiclk.source" option="board.clock.spiclk.source.disabled"/>
     <node id="board.clock.canfdclk.source" option="board.clock.canfdclk.source.disabled"/>
-    <node id="board.clock.lcdclk.source" option="board.clock.lcdclk.source.disabled"/>
-    <node id="board.clock.i3cclk.source" option="board.clock.i3cclk.source.pll1p"/>
+    <node id="board.clock.lcdclk.source" option="board.clock.lcdclk.source.pll1p"/>
+    <node id="board.clock.i3cclk.source" option="board.clock.i3cclk.source.disabled"/>
     <node id="board.clock.uck.source" option="board.clock.uck.source.disabled"/>
     <node id="board.clock.u60ck.source" option="board.clock.u60ck.source.disabled"/>
     <node id="board.clock.octaspiclk.source" option="board.clock.octaspiclk.source.disabled"/>
@@ -94,21 +94,34 @@
   </raClockConfiguration>
   <raPinConfiguration>
     <pincfg active="true" name="" symbol="">
-      <configSetting altId="adc0.an000.p004" configurationId="adc0.an000" isUsedByDriver="true" peripheral="ADC0"/>
-      <configSetting altId="adc0.an001.p005" configurationId="adc0.an001" isUsedByDriver="true" peripheral="ADC0"/>
-      <configSetting altId="adc0.an004.p007" configurationId="adc0.an004" isUsedByDriver="true" peripheral="ADC0"/>
-      <configSetting altId="adc0.an007.p014" configurationId="adc0.an007" isUsedByDriver="true" peripheral="ADC0"/>
+      <configSetting altId="adc0.an000.p004" configurationId="adc0.an000" peripheral="ADC0"/>
+      <configSetting altId="adc0.an001.p005" configurationId="adc0.an001" peripheral="ADC0"/>
+      <configSetting altId="adc0.an004.p007" configurationId="adc0.an004" peripheral="ADC0"/>
+      <configSetting altId="adc0.an007.p014" configurationId="adc0.an007" peripheral="ADC0"/>
       <configSetting altId="adc1.an102.p002" configurationId="adc1.an102" peripheral="ADC1"/>
       <configSetting altId="adc1.an104.p003" configurationId="adc1.an104" peripheral="ADC1"/>
       <configSetting altId="adc1.an105.p015" configurationId="adc1.an105" peripheral="ADC1"/>
       <configSetting altId="adc1.an106.p011" configurationId="adc1.an106" peripheral="ADC1"/>
       <configSetting altId="ceu.vio_clk.p708" configurationId="ceu.vio_clk" peripheral="CEU"/>
+      <configSetting altId="ceu.vio_d0.p400" configurationId="ceu.vio_d0" peripheral="CEU"/>
       <configSetting altId="ceu.vio_d12.p415" configurationId="ceu.vio_d12" peripheral="CEU"/>
       <configSetting altId="ceu.vio_hd.p709" configurationId="ceu.vio_hd" peripheral="CEU"/>
       <configSetting altId="ceu.vio_vd.p710" configurationId="ceu.vio_vd" peripheral="CEU"/>
+      <configSetting altId="ether_rmii.et0_linksta.p403" configurationId="ether_rmii.et0_linksta" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.et0_mdc.p401" configurationId="ether_rmii.et0_mdc" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.et0_mdio.p402" configurationId="ether_rmii.et0_mdio" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.ref50ck0.p701" configurationId="ether_rmii.ref50ck0" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_crs_dv.p705" configurationId="ether_rmii.rmii0_crs_dv" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_rx_er.p704" configurationId="ether_rmii.rmii0_rx_er" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_rxd0.p702" configurationId="ether_rmii.rmii0_rxd0" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_rxd1.p703" configurationId="ether_rmii.rmii0_rxd1" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_txd0.p700" configurationId="ether_rmii.rmii0_txd0" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_txd1.p406" configurationId="ether_rmii.rmii0_txd1" peripheral="ETHER_RMII"/>
+      <configSetting altId="ether_rmii.rmii0_txd_en.p405" configurationId="ether_rmii.rmii0_txd_en" peripheral="ETHER_RMII"/>
       <configSetting altId="glcd.lcd_clk.p806" configurationId="glcd.lcd_clk" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data0.p914" configurationId="glcd.lcd_data0" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data1.p915" configurationId="glcd.lcd_data1" peripheral="GLCD"/>
+      <configSetting altId="glcd.lcd_data10.p711" configurationId="glcd.lcd_data10" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data11.p712" configurationId="glcd.lcd_data11" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data12.p713" configurationId="glcd.lcd_data12" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data13.p714" configurationId="glcd.lcd_data13" peripheral="GLCD"/>
@@ -120,6 +133,7 @@
       <configSetting altId="glcd.lcd_data19.pb04" configurationId="glcd.lcd_data19" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data2.p910" configurationId="glcd.lcd_data2" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data20.pb03" configurationId="glcd.lcd_data20" peripheral="GLCD"/>
+      <configSetting altId="glcd.lcd_data21.pb02" configurationId="glcd.lcd_data21" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data22.pb00" configurationId="glcd.lcd_data22" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data23.p707" configurationId="glcd.lcd_data23" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_data3.p911" configurationId="glcd.lcd_data3" peripheral="GLCD"/>
@@ -134,11 +148,10 @@
       <configSetting altId="glcd.lcd_tcon1.p807" configurationId="glcd.lcd_tcon1" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_tcon2.p513" configurationId="glcd.lcd_tcon2" peripheral="GLCD"/>
       <configSetting altId="glcd.lcd_tcon3.p515" configurationId="glcd.lcd_tcon3" peripheral="GLCD"/>
-      <configSetting altId="i3c0.i3c_scl0.p400" configurationId="i3c0.i3c_scl0" isUsedByDriver="true" peripheral="I3C0"/>
-      <configSetting altId="i3c0.i3c_sda0.p401" configurationId="i3c0.i3c_sda0" isUsedByDriver="true" peripheral="I3C0"/>
       <configSetting altId="iic1.scl1.p512" configurationId="iic1.scl1" isUsedByDriver="true" peripheral="IIC1"/>
       <configSetting altId="iic1.sda1.p511" configurationId="iic1.sda1" isUsedByDriver="true" peripheral="IIC1"/>
       <configSetting altId="irq1.irq1.p508" configurationId="irq1.irq1" isUsedByDriver="true" peripheral="IRQ1"/>
+      <configSetting altId="irq3.irq3.p510" configurationId="irq3.irq3" isUsedByDriver="true" peripheral="IRQ3"/>
       <configSetting altId="jtag_fslash_swd.tck.p211" configurationId="jtag_fslash_swd.tck" peripheral="JTAG/SWD"/>
       <configSetting altId="jtag_fslash_swd.tdi.p208" configurationId="jtag_fslash_swd.tdi" peripheral="JTAG/SWD"/>
       <configSetting altId="jtag_fslash_swd.tdo.p209" configurationId="jtag_fslash_swd.tdo" peripheral="JTAG/SWD"/>
@@ -158,25 +171,24 @@
       <configSetting altId="ospi.om_sio6.p802" configurationId="ospi.om_sio6" peripheral="OSPI"/>
       <configSetting altId="ospi.om_sio7.p804" configurationId="ospi.om_sio7" peripheral="OSPI"/>
       <configSetting altId="p107.output.low" configurationId="p107"/>
+      <configSetting altId="p404.output.high" configurationId="p404"/>
       <configSetting altId="p414.output.low" configurationId="p414"/>
       <configSetting altId="p504.input" configurationId="p504"/>
       <configSetting altId="p505.input" configurationId="p505"/>
       <configSetting altId="p506.input" configurationId="p506"/>
       <configSetting altId="p507.output.low" configurationId="p507"/>
-      <configSetting altId="p600.input" configurationId="p600"/>
+      <configSetting altId="p600.output.low" configurationId="p600"/>
       <configSetting altId="p706.output.low" configurationId="p706"/>
-      <configSetting altId="p711.output.high" configurationId="p711"/>
       <configSetting altId="p809.output.low" configurationId="p809"/>
-      <configSetting altId="p810.output.low" configurationId="p810"/>
-      <configSetting altId="p811.output.low" configurationId="p811"/>
+      <configSetting altId="p810.input" configurationId="p810"/>
+      <configSetting altId="p811.input" configurationId="p811"/>
       <configSetting altId="p813.output.low" configurationId="p813"/>
       <configSetting altId="p907.input" configurationId="p907"/>
-      <configSetting altId="pa01.input" configurationId="pa01"/>
+      <configSetting altId="pa01.output.high" configurationId="pa01"/>
       <configSetting altId="pa06.input" configurationId="pa06"/>
       <configSetting altId="pa07.input" configurationId="pa07"/>
       <configSetting altId="pa11.input" configurationId="pa11"/>
       <configSetting altId="pa13.output.low" configurationId="pa13"/>
-      <configSetting altId="pb02.output.high" configurationId="pb02"/>
       <configSetting altId="sci2.rxd2.pa02" configurationId="sci2.rxd2" isUsedByDriver="true" peripheral="SCI2"/>
       <configSetting altId="sci2.txd2.pa03" configurationId="sci2.txd2" isUsedByDriver="true" peripheral="SCI2"/>
       <configSetting altId="sci3.rxd3.p408" configurationId="sci3.rxd3" peripheral="SCI3"/>

@@ -1,4 +1,16 @@
+/***********************************************************************************************************************
+ * File Name    : hal_entry.c
+ * Description  : Entry function.
+ **********************************************************************************************************************/
+/***********************************************************************************************************************
+* Copyright (c) 2023 - 2024 Renesas Electronics Corporation and/or its affiliates
+*
+* SPDX-License-Identifier: BSD-3-Clause
+***********************************************************************************************************************/
+#include "mipi_dsi_ep.h"
 #include "hal_data.h"
+#include "r_mipi_dsi.h"
+#include "common_utils.h"
 
 FSP_CPP_HEADER
 void R_BSP_WarmStart(bsp_warm_start_event_t event);
@@ -36,7 +48,6 @@ void hal_entry(void)
         while(1);
     }
 
-    /* Start mT-Kernel 3.0 */
     void knl_start_mtkernel(void);
     knl_start_mtkernel();
 
