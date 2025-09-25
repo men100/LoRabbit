@@ -78,12 +78,12 @@ extern const display_cfg_t g_display_cfg;
 void glcdc_callback(display_callback_args_t *p_args);
 #endif
 
-#define DISPLAY_IN_FORMAT_32BITS_RGB888_0
+#define DISPLAY_IN_FORMAT_16BITS_RGB565_0
 #if defined (DISPLAY_IN_FORMAT_32BITS_RGB888_0) || defined (DISPLAY_IN_FORMAT_32BITS_ARGB8888_0)
-#define DISPLAY_BITS_PER_PIXEL_INPUT0 (32)
-#elif defined (DISPLAY_IN_FORMAT_16BITS_RGB565_0) || defined (DISPLAY_IN_FORMAT_16BITS_ARGB1555_0) || defined (DISPLAY_IN_FORMAT_16BITS_ARGB4444_0)
-            #define DISPLAY_BITS_PER_PIXEL_INPUT0 (16)
-            #elif defined (DISPLAY_IN_FORMAT_CLUT8_0)
+            #define DISPLAY_BITS_PER_PIXEL_INPUT0 (32)
+            #elif defined (DISPLAY_IN_FORMAT_16BITS_RGB565_0) || defined (DISPLAY_IN_FORMAT_16BITS_ARGB1555_0) || defined (DISPLAY_IN_FORMAT_16BITS_ARGB4444_0)
+#define DISPLAY_BITS_PER_PIXEL_INPUT0 (16)
+#elif defined (DISPLAY_IN_FORMAT_CLUT8_0)
             #define DISPLAY_BITS_PER_PIXEL_INPUT0 (8)
             #elif defined (DISPLAY_IN_FORMAT_CLUT4_0)
             #define DISPLAY_BITS_PER_PIXEL_INPUT0 (4)

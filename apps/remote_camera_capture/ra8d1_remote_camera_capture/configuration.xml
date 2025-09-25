@@ -319,7 +319,7 @@
       <property id="module.driver.display.input0.buffer_name" value="fb_background"/>
       <property id="module.driver.display.input0.buffer_number" value="2"/>
       <property id="module.driver.display.input0.section" value=".sdram"/>
-      <property id="module.driver.display.input0.format" value="module.driver.display.input0.format.in_format_32bits_rgb888"/>
+      <property id="module.driver.display.input0.format" value="module.driver.display.input0.format.in_format_16bits_rgb565"/>
       <property id="module.driver.display.input0.line_descending_enable" value="module.driver.display.input0.line_descending_enable.false"/>
       <property id="module.driver.display.input0.lines_repeat_enable" value="module.driver.display.input0.lines_repeat_enable.false"/>
       <property id="module.driver.display.input0.lines_repeat_times" value="0"/>
@@ -351,7 +351,7 @@
       <property id="module.driver.display.output.vtiming.sync_polarity" value="module.driver.display.output.vtiming.sync_polarity.signal_polarity_loactive"/>
       <property id="module.driver.display.output.data_enable_polarity" value="module.driver.display.output.data_enable_polarity.signal_polarity_hiactive"/>
       <property id="module.driver.display.output.sync_edge" value="module.driver.display.output.sync_edge.signal_sync_edge_falling"/>
-      <property id="module.driver.display.output.format" value="module.driver.display.output.format.out_format_24bits_rgb888"/>
+      <property id="module.driver.display.output.format" value="module.driver.display.output.format.out_format_16bits_rgb565"/>
       <property id="module.driver.display.output.color_order" value="module.driver.display.output.color_order.color_order_rgb"/>
       <property id="module.driver.display.output.endian" value="module.driver.display.output.endian.endian_little"/>
       <property id="module.driver.display.output.bg_color.byte.a" value="255"/>

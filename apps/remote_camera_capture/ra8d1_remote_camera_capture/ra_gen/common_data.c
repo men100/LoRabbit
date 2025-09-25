@@ -145,7 +145,7 @@ const mipi_dsi_cfg_t g_mipi_dsi0_cfg =
           .p_timing = &g_mipi_dsi0_timing,
 
           .sync_pulse = (0),
-          .data_type = MIPI_DSI_VIDEO_DATA_24RGB_PIXEL_STREAM,
+          .data_type = MIPI_DSI_VIDEO_DATA_16RGB_PIXEL_STREAM,
           .virtual_channel_id = 0,
 
           .vertical_active_lines = 854,
@@ -160,7 +160,7 @@ const mipi_dsi_cfg_t g_mipi_dsi0_cfg =
           .horizontal_front_porch = (559 - 480 - 5 - 2),
           .horizontal_sync_polarity = (DISPLAY_SIGNAL_POLARITY_LOACTIVE != DISPLAY_SIGNAL_POLARITY_HIACTIVE),
 
-          .video_mode_delay = 186 /* This value was calculated by FSP. An override is available but not recommended for most users */,
+          .video_mode_delay = 218 /* This value was calculated by FSP. An override is available but not recommended for most users */,
 
           .hsa_no_lp = ((0x0) & R_DSILINK_VMSET0R_HSANOLP_Msk),
           .hbp_no_lp = ((0x0) & R_DSILINK_VMSET0R_HBPNOLP_Msk),
@@ -321,7 +321,7 @@ const display_cfg_t g_display_cfg =
 #endif
           .hsize = DISPLAY_HSIZE_INPUT0,
           .vsize = DISPLAY_VSIZE_INPUT0, .hstride = DISPLAY_BUFFER_STRIDE_PIXELS_INPUT0, .format =
-                  DISPLAY_IN_FORMAT_32BITS_RGB888,
+                  DISPLAY_IN_FORMAT_16BITS_RGB565,
           .line_descending_enable = false, .lines_repeat_enable = false, .lines_repeat_times = 0 },
 
           /** Input2(Graphics2 layer) configuration */
@@ -357,7 +357,7 @@ const display_cfg_t g_display_cfg =
                     .vtiming =
                     { .total_cyc = 894, .display_cyc = 854, .back_porch = 20, .sync_width = 3, .sync_polarity =
                               DISPLAY_SIGNAL_POLARITY_LOACTIVE },
-                    .format = DISPLAY_OUT_FORMAT_24BITS_RGB888, .endian = DISPLAY_ENDIAN_LITTLE, .color_order =
+                    .format = DISPLAY_OUT_FORMAT_16BITS_RGB565, .endian = DISPLAY_ENDIAN_LITTLE, .color_order =
                             DISPLAY_COLOR_ORDER_RGB,
                     .data_enable_polarity = DISPLAY_SIGNAL_POLARITY_HIACTIVE, .sync_edge =
                             DISPLAY_SIGNAL_SYNC_EDGE_FALLING,
@@ -432,7 +432,7 @@ const display_cfg_t g_display_cfg =
                 .hsize               = DISPLAY_HSIZE_INPUT0,
                 .vsize               = DISPLAY_VSIZE_INPUT0,
                 .hstride             = DISPLAY_BUFFER_STRIDE_PIXELS_INPUT0,
-                .format              = DISPLAY_IN_FORMAT_32BITS_RGB888,
+                .format              = DISPLAY_IN_FORMAT_16BITS_RGB565,
                 .line_descending_enable = false,
                 .lines_repeat_enable = false,
                 .lines_repeat_times  = 0
