@@ -89,8 +89,19 @@ uint8_t work_buffer[BUFFER_SIZE];
 
 LOCAL void task_1(INT stacd, void *exinf)
 {
+    LoRabbit_TransferStatus_t status;
+
     while(1) {
         tm_printf((UB*)"task 1\n");
+        if (LoRabbit_GetTransferStatus(&s_lora_handle, &status) == LORABBIT_OK) {
+            if (status.is_active) {
+                tm_printf((UB*)"LoRa Transferring: Packet %d / %d\n",
+                          status.current_packet_index + 1,
+                          status.total_packets);
+            } else {
+                tm_printf((UB*)"LoRa Idle.\n");
+            }
+        }
         tk_dly_tsk(1000);
     }
 }

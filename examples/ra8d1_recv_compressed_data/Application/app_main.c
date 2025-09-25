@@ -87,7 +87,9 @@ uint8_t work_buffer[BUFFER_SIZE];
 
 LOCAL void task_1(INT stacd, void *exinf)
 {
-	while(1) {
+    LoRabbit_TransferStatus_t status;
+
+    while(1) {
 		tm_printf((UB*)"task 1\n");
 
 		/* Inverts the LED on the board. */
@@ -95,8 +97,17 @@ LOCAL void task_1(INT stacd, void *exinf)
 		out_h(PORT_PODR(4), in_h(PORT_PODR(4))^(1<<14));    // GREEN
 		out_h(PORT_PODR(1), in_h(PORT_PODR(1))^(1<<7));     // RED
 
-		tk_dly_tsk(1000);
-	}
+        if (LoRabbit_GetTransferStatus(&s_lora_handle, &status) == LORABBIT_OK) {
+            if (status.is_active) {
+                tm_printf((UB*)"LoRa Transferring: Packet %d / %d\n",
+                          status.total_packets == 0 ? 0 : status.current_packet_index + 1,
+                          status.total_packets);
+            } else {
+                tm_printf((UB*)"LoRa Idle.\n");
+            }
+        }
+        tk_dly_tsk(1000);
+    }
 }
 
 LOCAL void task_2(INT stacd, void *exinf)
