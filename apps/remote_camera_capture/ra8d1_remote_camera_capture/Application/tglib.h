@@ -35,6 +35,13 @@ ER tglib_onoff_lcd(UINT status);
 void tglib_clear_scr(UH color);
 void tglib_draw_rect(UH color, UW posX, UW posY, UW width, UW height);
 
+#define FONT_WIDTH      8
+#define FONT_HEIGHT     16
+void tglib_draw_char(char character, UW posX, UW posY, UH color);
+void tglib_draw_string(const char *str, UW posX, UW posY, UH color);
+void tglib_draw_char_scaled(char character, UW posX, UW posY, UH color, UW scale);
+void tglib_draw_string_scaled(const char *str, UW posX, UW posY, UH color, UW scale);
+
 #define TLIBLCD_COLOR_BLUE  (0x001F)      // R:0, G:0, B:31
 #define TLIBLCD_COLOR_RED   (0xF800)      // R:31, G:0, B:0
 #define TLIBLCD_COLOR_GREEN (0x07E0)      // R:0, G:63, B:0
