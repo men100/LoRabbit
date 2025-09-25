@@ -5,6 +5,8 @@
 #include <LoRabbit.h>
 #include "r_sci_uart.h"
 
+#define LOG(...) tm_printf((UB*)__VA_ARGS__)
+
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart0;
 
@@ -34,13 +36,13 @@ int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
                                    5000,  // 許容エラー率 (5%)
                                    &baud_setting);
     if (FSP_SUCCESS != err) {
-        tm_printf((UB*)"R_SCI_UART_BaudCalculate failed\n");
+        LOG("R_SCI_UART_BaudCalculate failed\n");
         // 計算失敗
         return -1;
     }
 
     // mddr が 0x80 になっているが、Bitrate Modulation (brme) が 0 になっているので無視される
-    tm_printf((UB*)"baudrate=%dbps, baud_setting.(semr_baudrate_bits, cks, brr, mddr)=(0x%02x, %d, 0x%02x, 0x%02x)\n",
+    LOG("baudrate=%dbps, baud_setting.(semr_baudrate_bits, cks, brr, mddr)=(0x%02x, %d, 0x%02x, 0x%02x)\n",
             baudrate, baud_setting.semr_baudrate_bits, baud_setting.cks, baud_setting.brr, baud_setting.mddr);
 
     // 計算結果を void* にキャストして、抽象APIである baudSet に渡す
@@ -118,9 +120,9 @@ LOCAL void task_2(INT stacd, void *exinf)
     LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
     while(1) {
-        tm_printf((UB*)"task 2\n");
+        LOG("task 2\n");
 
-        tm_printf((UB*)"Sending\n");
+        LOG("Sending\n");
         int result = LoRabbit_SendCompressedData(&s_lora_handle,
                                                  0x00,
                                                  0,
@@ -130,9 +132,9 @@ LOCAL void task_2(INT stacd, void *exinf)
                                                  work_buffer,
                                                  BUFFER_SIZE);
         if (result == 0) {
-            tm_printf((UB*)"LoRa_SendCompressedData success\n");
+            LOG("LoRa_SendCompressedData success\n");
         } else {
-            tm_printf((UB*)"LoRa_SendCompressedData failed with code: %d\n", result);
+            LOG("LoRa_SendCompressedData failed with code: %d\n", result);
             return;
         }
         tk_dly_tsk(5000);
@@ -142,9 +144,9 @@ LOCAL void task_2(INT stacd, void *exinf)
 /* usermain関数 */
 EXPORT INT usermain(void)
 {
-    tm_putstring((UB*)"Start User-main program.\n");
+    LOG("Start User-main program.\n");
 
-    tm_putstring((UB*)"LoRa send test\n");
+    LOG("LoRa send test\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {
@@ -162,10 +164,10 @@ EXPORT INT usermain(void)
 
     // LoRaモジュールを初期化
     if (LoRabbit_InitModule(&s_lora_handle, &s_config) != 0) {
-        tm_putstring((UB*)"LoRa Init Failed!\n");
+        LOG("LoRa Init Failed!\n");
         while(1);
     }
-    tm_putstring((UB*)"LoRa Init Success!\n");
+    LOG("LoRa Init Success!\n");
 
     /* Create & Start Tasks */
     tskid_1 = tk_cre_tsk(&ctsk_1);
