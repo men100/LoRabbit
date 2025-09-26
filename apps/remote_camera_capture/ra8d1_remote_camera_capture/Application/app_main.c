@@ -23,6 +23,15 @@ static LoraHandle_t s_lora_handle;
 // ボタン押下をタスクに通知するためのセマフォ
 static ID s_button_s2_press_sem_id;
 
+// LCD 描画の更新をリクエストするためのセマフォ
+static ID s_lcd_update_sem_id;
+
+// 現在の転送状態
+static LoRabbit_TransferStatus_t s_transfer_status;
+
+// 正しく受信できたかどうか
+static bool is_receive_success = false;
+
 // サーバーから受信した大容量データを格納するバッファ
 #define DATA_BUFFER_SIZE 3072
 static uint8_t s_received_data_buffer[DATA_BUFFER_SIZE];
@@ -53,13 +62,13 @@ int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
                                      5000,  // 許容エラー率 (5%)
                                      &baud_setting);
     if (FSP_SUCCESS != err) {
-        tm_printf((UB*)"R_SCI_B_UART_BaudCalculate failed\n");
+        LOG("R_SCI_B_UART_BaudCalculate failed\n");
         // 計算失敗
         return -1;
     }
 
     // mddr (上位8bit) が 0x80 になっているが、Bitrate Modulation (brme) が 0 になっているので無視される
-    tm_printf((UB*)"baudrate=%dbps, baud_setting.baudrate_bits: 0x%08x\n",
+    LOG("baudrate=%dbps, baud_setting.baudrate_bits: 0x%08x\n",
             baudrate, baud_setting.baudrate_bits);
 
     // 計算結果を void* にキャストして、抽象APIである baudSet に渡す
@@ -83,6 +92,15 @@ LoraConfigItem_t s_config = {
     .encryption_key           = 0x0000,
 };
 
+LOCAL void lcd_task(INT stacd, void *exinf);  // task execution function
+LOCAL ID    tskid_lcd;            // Task ID number
+LOCAL T_CTSK ctsk_lcd = {             // Task creation information
+    .itskpri    = 10,
+    .stksz      = 1024,
+    .task       = lcd_task,
+    .tskatr     = TA_HLNG | TA_RNG3,
+};
+
 LOCAL void task_1(INT stacd, void *exinf);	// task execution function
 LOCAL ID	tskid_1;			// Task ID number
 LOCAL T_CTSK ctsk_1 = {				// Task creation information
@@ -101,9 +119,40 @@ LOCAL T_CTSK ctsk_2 = {             // Task creation information
     .tskatr     = TA_HLNG | TA_RNG3,
 };
 
+LOCAL void lcd_task(INT stacd, void *exinf) {
+    LoRabbit_TransferStatus_t *p_status = &s_transfer_status;
+    char buffer[50];
+
+    // LCD 更新要求用セマフォを生成
+    T_CSEM csem = { .exinf = 0, .sematr = TA_TFIFO, .isemcnt = 0, .maxsem = 1 };
+    s_lcd_update_sem_id = tk_cre_sem(&csem);
+
+
+    while(1) {
+        LOG("===== lcd_task =====\n");
+
+        tglib_clear_scr(TLIBLCD_COLOR_BLACK);
+
+        if (p_status->is_active) {
+            sprintf(buffer, "Packets: %d / %d", p_status->current_packet_index, p_status->total_packets);
+        } else {
+            sprintf(buffer, "LoRa is idle");
+        }
+        tglib_draw_string_scaled(buffer, 10, 10, TLIBLCD_COLOR_WHITE, 2);
+
+        if (!p_status->is_active && is_receive_success) {
+            tglib_draw_buffer_scaled((UH*)s_received_data_buffer, 112, 100, 32, 32, 8);
+        }
+
+        tk_wai_sem(s_lcd_update_sem_id, 1, TMO_FEVR);
+    }
+}
+
 LOCAL void task_1(INT stacd, void *exinf)
 {
-    LoRabbit_TransferStatus_t status;
+    LoRabbit_TransferStatus_t *p_status = &s_transfer_status;
+    LoRabbit_TransferStatus_t oldStatus;
+    memset(&oldStatus, 0x0, sizeof(oldStatus));
 
     while(1) {
         tm_printf((UB*)"task 1\n");
@@ -113,14 +162,21 @@ LOCAL void task_1(INT stacd, void *exinf)
         out_h(PORT_PODR(4), in_h(PORT_PODR(4))^(1<<14));    // GREEN
         out_h(PORT_PODR(1), in_h(PORT_PODR(1))^(1<<7));     // RED
 
-        if (LoRabbit_GetTransferStatus(&s_lora_handle, &status) == LORABBIT_OK) {
-            if (status.is_active) {
-                tm_printf((UB*)"LoRa Transferring: Packet %d / %d\n",
-                          status.total_packets == 0 ? 0 : status.current_packet_index + 1,
-                          status.total_packets);
+        if (LoRabbit_GetTransferStatus(&s_lora_handle, p_status) == LORABBIT_OK) {
+            if (p_status->is_active) {
+                LOG("LoRa Transferring: Packet %d / %d\n",
+                          p_status->total_packets == 0 ? 0 : p_status->current_packet_index + 1,
+                          p_status->total_packets);
             } else {
-                tm_printf((UB*)"LoRa Idle.\n");
+                LOG("LoRa Idle.\n");
             }
+
+            if (oldStatus.is_active != p_status->is_active ||
+                oldStatus.current_packet_index != p_status->current_packet_index ||
+                oldStatus.total_packets != p_status->total_packets) {
+                tk_sig_sem(s_lcd_update_sem_id, 1);
+            }
+            oldStatus = *p_status;
         }
         tk_dly_tsk(1000);
     }
@@ -178,8 +234,10 @@ LOCAL void task_2(INT stacd, void *exinf)
         // 受信結果を処理
         if (err == LORABBIT_OK) {
             LOG("Successfully received large data! Size: %lu bytes\n", received_len);
+            is_receive_success = true;
         } else {
             LOG("Failed to receive large data. Error: %d\n", err);
+            is_receive_success = false;
         }
     }
 }
@@ -200,6 +258,10 @@ EXPORT INT usermain(void)
         .pf_baud_set_helper = my_sci_b_uart_baud_set_helper,
     };
 
+    // tglib を初期化
+    tglib_init();
+    tglib_onoff_lcd(LCD_ON);
+
     // LoRaライブラリを初期化
     LoRabbit_Init(&s_lora_handle, &lora_hw_config);
 
@@ -211,7 +273,10 @@ EXPORT INT usermain(void)
     }
     tm_putstring((UB*)"LoRa Init Success!\n");
 
-	//* Create & Start Tasks
+    // Create & Start Tasks
+    tskid_lcd = tk_cre_tsk(&ctsk_lcd);
+    tk_sta_tsk(tskid_lcd, 0);
+
 	tskid_1 = tk_cre_tsk(&ctsk_1);
 	tk_sta_tsk(tskid_1, 0);
 
