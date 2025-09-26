@@ -94,6 +94,65 @@ static void lora_status_set_idle(LoraHandle_t *p_handle) {
     tk_sig_sem(p_handle->status_mutex_id, 1);
 }
 
+/**
+ * @brief パケットを1つ受信し、期待通りのものか検証する
+ * @param[in] p_handle ハンドル
+ * @param[in,out] p_remaining_timeout 残りタイムアウト時間(ms)へのポインタ。関数内で消費時間を減算する。
+ * @param[in] expected_index 期待するパケットインデックス
+ * @param[in] transaction_id_to_match 期待するトランザクションID (最初のパケットの場合は無視される)
+ * @param[out] p_out_frame 受信したフレームの格納先
+ * @param[out] p_out_header パースしたヘッダの格納先
+ * @retval LORABBIT_OK 期待通りのパケットを受信
+ * @retval LORABBIT_ERROR_TIMEOUT タイムアウト
+ * @retval LORABBIT_ERROR_RETRY 期待しないパケットを受信（リトライが必要）
+ */
+static ER lora_receive_and_validate_packet(
+    LoraHandle_t *p_handle,
+    TMO *p_remaining_timeout,
+    uint8_t expected_index,
+    uint8_t transaction_id_to_match,
+    RecvFrameE220900T22SJP_t *p_out_frame,
+    LoRabbitTP_Header_t *p_out_header)
+{
+    SYSTIM start_time, end_time;
+    tk_get_tim(&start_time);
+
+    int recv_len = LoRabbit_ReceiveFrame(p_handle, p_out_frame, *p_remaining_timeout);
+
+    // タイムアウトを更新
+    if (*p_remaining_timeout != TMO_FEVR) {
+        tk_get_tim(&end_time);
+        uint64_t start_ms = ((uint64_t)start_time.hi << 32) | start_time.lo;
+        uint64_t end_ms   = ((uint64_t)end_time.hi << 32) | end_time.lo;
+        if (end_ms > start_ms) {
+            *p_remaining_timeout -= (TMO)(end_ms - start_ms);
+        }
+    }
+
+    if (recv_len <= 0) {
+        return LORABBIT_ERROR_TIMEOUT;
+    }
+
+    lora_parse_header(p_out_frame->recv_data, p_out_header);
+
+    // パケットを検証
+    bool is_valid = false;
+    if (expected_index == 0) { // 最初のパケットの検証
+        if (!(p_out_header->control_byte & LORABBIT_TP_FLAG_IS_ACK) &&
+             p_out_header->packet_index == 0) {
+            is_valid = true;
+        }
+    } else { // 後続パケットの検証
+        if (!(p_out_header->control_byte & LORABBIT_TP_FLAG_IS_ACK) &&
+            (p_out_header->transaction_id == transaction_id_to_match) &&
+            (p_out_header->packet_index == expected_index)) {
+            is_valid = true;
+        }
+    }
+
+    return is_valid ? LORABBIT_OK : LORABBIT_ERROR_RETRY;
+}
+
 int LoRabbit_SendData(LoraHandle_t *p_handle,
                            uint16_t target_address,
                            uint8_t target_channel,
@@ -198,17 +257,19 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
     // 転送開始を記録
     lora_status_set_active(p_handle, 0, 0); // この時点では総パケット数不明
 
-    // 最初のパケットを待つ
-    int recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, timeout);
-    if (recv_len <= 0) {
-        ret = (recv_len == 0) ? LORABBIT_ERROR_TIMEOUT : LORABBIT_ERROR_INVALID_PACKET; // タイムアウト or エラー
-        goto cleanup_and_exit;
+    // 最初のパケットを受信するループ
+    TMO remaining_timeout = timeout;
+    while (remaining_timeout > 0 || timeout == TMO_FEVR) {
+        ret = lora_receive_and_validate_packet(p_handle, &remaining_timeout, 0, 0, &frame, &header);
+        if (ret == LORABBIT_OK) {
+            break; // 成功！
+        }
+        if (ret != LORABBIT_ERROR_RETRY) {
+            goto cleanup_and_exit; // タイムアウトか致命的エラー
+        }
+        // LORABBIT_ERROR_RETRY の場合はループを継続
     }
-    lora_parse_header(frame.recv_data, &header);
-
-    // 最初のパケットが正当かチェック
-    if ((header.control_byte & LORABBIT_TP_FLAG_IS_ACK) || header.packet_index != 0) {
-        ret = LORABBIT_ERROR_INVALID_PACKET; // 不正なパケット
+    if (ret != LORABBIT_OK) {
         goto cleanup_and_exit;
     }
 
@@ -222,8 +283,13 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
     lora_status_set_active(p_handle, header.total_packets, 0);
 
     // 最初のパケットを処理
+    // データをバッファにコピー
     memcpy(p_buffer, &frame.recv_data[LORABBIT_TP_HEADER_SIZE], header.payload_length);
+
+    // 合計サイズを更新
     written_size += header.payload_length;
+
+    // ACK要求があれば返信する
     if (header.control_byte & LORABBIT_TP_FLAG_ACK_REQUEST) {
         lora_send_ack(p_handle, &header);
     }
@@ -237,49 +303,61 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
         goto cleanup_and_exit;
     }
 
-    // 残りのパケットを受信
+    // 後続パケットを受信するループ
     for (uint8_t expected_index = 1; expected_index < header.total_packets; expected_index++) {
-        // 状態を更新（現在パケット番号）
         lora_status_set_progress(p_handle, expected_index);
+        remaining_timeout = LORABBIT_TP_ACK_TIMEOUT_MS;
 
-        // パケット間のタイムアウトは短く設定
-        recv_len = LoRabbit_ReceiveFrame(p_handle, &frame, LORABBIT_TP_ACK_TIMEOUT_MS);
-        if (recv_len <= 0) {
-            ret = LORABBIT_ERROR_TIMEOUT;
-            goto cleanup_and_exit;
+        while (remaining_timeout > 0) {
+            ret = lora_receive_and_validate_packet(p_handle,
+                                                   &remaining_timeout,
+                                                   expected_index,
+                                                   header.transaction_id,
+                                                   &frame,
+                                                   &header);
+            if (ret == LORABBIT_OK) {
+                break; // 成功！
+            }
+            if (ret != LORABBIT_ERROR_RETRY) {
+                goto cleanup_and_exit; // タイムアウトか致命的エラー
+            }
+            // LORABBIT_ERROR_RETRY の場合はループを継続
         }
-
-        LoRabbitTP_Header_t subsequent_header;
-        lora_parse_header(frame.recv_data, &subsequent_header);
-
-        // パケットが現在のトランザクションに属し、かつ期待したインデックスか検証
-        if ((subsequent_header.control_byte & LORABBIT_TP_FLAG_IS_ACK) ||
-            (subsequent_header.transaction_id != header.transaction_id) ||
-            (subsequent_header.packet_index != expected_index))
-        {
-            // 不正なパケットは無視してタイムアウトまで待機を続けることもできるが、
-            // ここではシンプルにエラーとして終了
-            ret = LORABBIT_ERROR_INVALID_PACKET;
+        if (ret != LORABBIT_OK) {
             goto cleanup_and_exit;
         }
 
         // データをバッファにコピー
-        memcpy(&p_buffer[written_size], &frame.recv_data[LORABBIT_TP_HEADER_SIZE], subsequent_header.payload_length);
-        written_size += subsequent_header.payload_length;
+        memcpy(&p_buffer[written_size],
+               &frame.recv_data[LORABBIT_TP_HEADER_SIZE],
+               header.payload_length);
 
-        // ACKを返す
-        if (subsequent_header.control_byte & LORABBIT_TP_FLAG_ACK_REQUEST) {
-            lora_send_ack(p_handle, &subsequent_header);
+        // 合計サイズを更新
+        written_size += header.payload_length;
+
+        // ACK要求があれば返信する
+        if (header.control_byte & LORABBIT_TP_FLAG_ACK_REQUEST) {
+            lora_send_ack(p_handle, &header);
         }
 
-        // 伝送完了チェック
-        if (subsequent_header.control_byte & LORABBIT_TP_FLAG_EOT) {
-            if(p_received_size) {
-                *p_received_size = written_size;
-            }
-            ret = LORABBIT_OK; // 完了
+        // EOTフラグの検証
+        bool is_last_packet = (expected_index == header.total_packets - 1);
+        bool has_eot_flag = (header.control_byte & LORABBIT_TP_FLAG_EOT);
+
+        if (is_last_packet && !has_eot_flag) {
+            // 最後のパケットのはずなのにEOTフラグがない -> プロトコルエラー
+            ret = LORABBIT_ERROR_INVALID_PACKET;
             goto cleanup_and_exit;
         }
+
+        // MEMO: ここのチェックは厳密すぎるかも
+#if 0
+        if (!is_last_packet && has_eot_flag) {
+            // 最後ではないのにEOTフラグがある -> プロトコルエラー
+            ret = LORABBIT_ERROR_INVALID_PACKET;
+            goto cleanup_and_exit;
+        }
+#endif
     }
 
     if (p_received_size) {
@@ -287,9 +365,7 @@ int LoRabbit_ReceiveData(LoraHandle_t *p_handle,
     }
 
 cleanup_and_exit:
-    // 転送終了を記録
     lora_status_set_idle(p_handle);
-
     return ret;
 }
 
