@@ -1,7 +1,7 @@
 /* generated configuration header file - do not edit */
 #ifndef BSP_MCU_DEVICE_PN_CFG_H_
 #define BSP_MCU_DEVICE_PN_CFG_H_
-#define BSP_MCU_R7FA8D1BHDCBD
+#define BSP_MCU_R7FA8D1BHECBD
 #define BSP_MCU_FEATURE_SET ('B')
 #define BSP_ROM_SIZE_BYTES (2064384)
 #define BSP_RAM_SIZE_BYTES (917504)

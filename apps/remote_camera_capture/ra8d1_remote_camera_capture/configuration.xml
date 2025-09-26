@@ -4,18 +4,18 @@
     <option key="#Board#" value="board.ra8d1ek"/>
     <option key="CPU" value="RA8D1"/>
     <option key="Core" value="CM85"/>
-    <option key="#TargetName#" value="R7FA8D1BHDCBD"/>
+    <option key="#TargetName#" value="R7FA8D1BHECBD"/>
     <option key="#TargetARCHITECTURE#" value="cortex-m85"/>
     <option key="#DeviceCommand#" value="R7FA8D1BH"/>
     <option key="#RTOS#" value="_none"/>
-    <option key="#pinconfiguration#" value="R7FA8D1BHDCBD.pincfg"/>
+    <option key="#pinconfiguration#" value="R7FA8D1BHECBD.pincfg"/>
     <option key="#FSPVersion#" value="5.9.0"/>
     <option key="#ConfigurationFragments#" value="Renesas##BSP##Board##ra8d1_ek##"/>
     <option key="#SELECTED_TOOLCHAIN#" value="gcc-arm-embedded"/>
     <option key="#ToolchainVersion#" value="13.2.1.arm-13-7"/>
   </generalSettings>
   <raBspConfiguration>
-    <config id="config.bsp.ra8d1.R7FA8D1BHDCBD">
+    <config id="config.bsp.ra8d1.R7FA8D1BHECBD">
       <property id="config.bsp.part_number" value="config.bsp.part_number.value"/>
       <property id="config.bsp.rom_size_bytes" value="config.bsp.rom_size_bytes.value"/>
       <property id="config.bsp.rom_size_bytes_hidden" value="2064384"/>
@@ -113,7 +113,7 @@
       <property id="config.bsp.fsp.settling_delay_us" value="150"/>
       <property id="config.bsp.common.main_osc_wait" value="config.bsp.common.main_osc_wait.wait_8163"/>
       <property id="config.bsp.fsp.mcu.adc.max_freq_hz" value="60000000"/>
-      <property id="config.bsp.fsp.mcu.sci_b_uart.max_baud" value="20000000"/>
+      <property id="config.bsp.fsp.mcu.sci_b_uart.max_baud" value="30000000"/>
       <property id="config.bsp.fsp.mcu.sci_b_uart.ctspen_channels" value="0x021F"/>
       <property id="config.bsp.fsp.mcu.adc.sample_and_hold" value="0"/>
       <property id="config.bsp.fsp.mcu.adc.sensors_are_exclusive" value="0"/>
@@ -232,8 +232,8 @@
     <node id="board.clock.octaspiclk.display" option="board.clock.octaspiclk.display.value"/>
   </raClockConfiguration>
   <raComponentSelection>
-    <component apiversion="" class="BSP" condition="" group="ra8d1" subgroup="device" variant="R7FA8D1BHDCBD" vendor="Renesas" version="5.9.0">
-      <description>Board support package for R7FA8D1BHDCBD</description>
+    <component apiversion="" class="BSP" condition="" group="ra8d1" subgroup="device" variant="R7FA8D1BHECBD" vendor="Renesas" version="5.9.0">
+      <description>Board support package for R7FA8D1BHECBD</description>
       <originalPack>Renesas.RA_mcu_ra8d1.5.9.0.pack</originalPack>
     </component>
     <component apiversion="" class="BSP" condition="" group="ra8d1" subgroup="device" variant="" vendor="Renesas" version="5.9.0">
@@ -1222,10 +1222,10 @@
       <configSetting altId="p808.gpio_mode.gpio_mode_peripheral" configurationId="p808.gpio_mode"/>
       <configSetting altId="p809.output.low" configurationId="p809"/>
       <configSetting altId="p809.gpio_mode.gpio_mode_out.low" configurationId="p809.gpio_mode"/>
-      <configSetting altId="p810.input" configurationId="p810"/>
-      <configSetting altId="p810.gpio_mode.gpio_mode_in" configurationId="p810.gpio_mode"/>
-      <configSetting altId="p811.input" configurationId="p811"/>
-      <configSetting altId="p811.gpio_mode.gpio_mode_in" configurationId="p811.gpio_mode"/>
+      <configSetting altId="p810.output.low" configurationId="p810"/>
+      <configSetting altId="p810.gpio_mode.gpio_mode_out.low" configurationId="p810.gpio_mode"/>
+      <configSetting altId="p811.output.low" configurationId="p811"/>
+      <configSetting altId="p811.gpio_mode.gpio_mode_out.low" configurationId="p811.gpio_mode"/>
       <configSetting altId="p813.output.low" configurationId="p813"/>
       <configSetting altId="p813.gpio_mode.gpio_mode_out.low" configurationId="p813.gpio_mode"/>
       <configSetting altId="p814.usbfs.usb_dp" configurationId="p814"/>
@@ -1371,7 +1371,7 @@
       <configSetting altId="usbfs.usb_vbus.p407" configurationId="usbfs.usb_vbus"/>
       <configSetting altId="usbfs.usb_vbusen.p500" configurationId="usbfs.usb_vbusen"/>
     </pincfg>
-    <pincfg active="false" name="R7FA8D1BHDCBD.pincfg" selected="false" symbol="">
+    <pincfg active="false" name="R7FA8D1BHECBD.pincfg" selected="false" symbol="">
       <configSetting altId="jtag_fslash_swd.mode.jtag.free" configurationId="jtag_fslash_swd.mode"/>
       <configSetting altId="jtag_fslash_swd.tck.p211" configurationId="jtag_fslash_swd.tck"/>
       <configSetting altId="jtag_fslash_swd.tdi.p208" configurationId="jtag_fslash_swd.tdi"/>

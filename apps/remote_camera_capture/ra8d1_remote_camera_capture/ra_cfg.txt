@@ -1,7 +1,7 @@
 FSP Configuration
   Board "RA8|RA8D1|EK-RA8D1"
-  R7FA8D1BHDCBD
-    part_number: R7FA8D1BHDCBD
+  R7FA8D1BHECBD
+    part_number: R7FA8D1BHECBD
     rom_size_bytes: 2064384
     ram_size_bytes: 917504
     data_flash_size_bytes: 12288
@@ -294,8 +294,8 @@ FSP Configuration
       P807 N12 GLCD_LCD_TCON1 LCD_TCON1 L - "Peripheral mode" - - "GLCD: LCD_TCON1" - IO - - 
       P808 R1 OSPI_OM_SCLK OSPI_CK L None "Peripheral mode" - - "GPT13: GTIOC13B; IRQ15: IRQ15; OSPI: OM_SCLK" - O - - 
       P809 R2 GPIO PMOD2_8_RESET L - "Output mode (Initial Low)" - - "OSPI: OM_SCLKN" - IO - - 
-      P810 P4 GPIO PMOD2_9_GPIO - - "Input mode" - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
-      P811 M6 GPIO PMOD2_10_GPIO - - "Input mode" - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
+      P810 P4 GPIO PMOD2_9_GPIO L - "Output mode (Initial Low)" - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
+      P811 M6 GPIO PMOD2_10_GPIO L - "Output mode (Initial Low)" - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
       P812 R4 - - - - Disabled - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - なし - - 
       P813 J5 GPIO ARDUINO_RESET L - "Output mode (Initial Low)" - - "BUS: D20; SDRAM: DQ20" - IO - - 
       P814 A14 "USB FS_USB_DP" USB_DP L - "Peripheral mode" - - "CANFD0: CRX0; GPT8: GTIOC8B; USB FS: USB_DP" - IO - - 
@@ -386,7 +386,7 @@ FSP Configuration
       VSS_USB B13 SYSTEM_VSS_USB - - - - - - - - IO "Read only" - 
       XCIN J15 CGC_XCIN - - - - - - - - IO "Read only" - 
       XCOUT J14 CGC_XCOUT - - - - - - - - IO "Read only" - 
-    R7FA8D1BHDCBD.pincfg -> 
+    R7FA8D1BHECBD.pincfg -> 
       AVCC0 N8 SYSTEM_AVCC0 - - - - - - - - IO "Read only" - 
       AVCC_MIPI B9 SYSTEM_AVCC_MIPI - - - - - - - - IO "Read only" - 
       AVCC_USBHS H13 SYSTEM_AVCC_USBHS - - - - - - - - IO "Read only" - 
@@ -519,8 +519,8 @@ FSP Configuration
       P807 N12 - LCD_TCON1 L - Disabled - - "GLCD: LCD_TCON1" - IO - - 
       P808 R1 - OSPI_CK L None Disabled - - "GPT13: GTIOC13B; IRQ15: IRQ15; OSPI: OM_SCLK" - O - - 
       P809 R2 - PMOD2_8_RESET L - Disabled - - "OSPI: OM_SCLKN" - IO - - 
-      P810 P4 - PMOD2_9_GPIO - - Disabled - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
-      P811 M6 - PMOD2_10_GPIO - - Disabled - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
+      P810 P4 - PMOD2_9_GPIO L - Disabled - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
+      P811 M6 - PMOD2_10_GPIO L - Disabled - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
       P812 R4 - - - - Disabled - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - なし - - 
       P813 J5 - ARDUINO_RESET L - Disabled - - "BUS: D20; SDRAM: DQ20" - IO - - 
       P814 A14 - USB_DP L - Disabled - - "CANFD0: CRX0; GPT8: GTIOC8B; USB FS: USB_DP" - IO - - 
