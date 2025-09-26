@@ -248,8 +248,7 @@ LOCAL void draw_rect (UH color, UW posX, UW posY, UW width, UW height)
     {
         for (UW x = posX; x < xx; x ++)
         {
-            // RGB565 にすると、色反転モードが有効になるようで、color のビットを反転するとうまくいく模様
-            p_fb[x] = ~color;
+            p_fb[x] = color;
         }
         p_fb += hstride;
     }
@@ -480,8 +479,8 @@ void tglib_draw_buffer(const UH *buffer, UW posX, UW posY, UW width, UW height)
             // 上位8bitと下位8bitを入れ替える
             UH swapped_pixel = (pixel << 8) | (pixel >> 8);
 
-            // ビット反転して書き込む
-            p_dst[i] = ~swapped_pixel;
+            // 書き込み
+            p_dst[i] = swapped_pixel;
         }
     }
 
