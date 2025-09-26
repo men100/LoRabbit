@@ -79,3 +79,9 @@ int LoRabbit_ReceiveCompressedData(LoraHandle_t *p_handle,
  * @retval LORABBIT_OK 成功
  */
 int LoRabbit_GetTransferStatus(LoraHandle_t *p_handle, LoRabbit_TransferStatus_t *p_status);
+
+/**
+ * @brief 現在ハンドルに蓄積されている通信履歴をコンソールに出力する
+ * @param[in] p_handle 操作対象のハンドル
+ */
+void LoRabbit_DumpHistory(LoraHandle_t *p_handle);

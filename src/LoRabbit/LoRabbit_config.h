@@ -1,7 +1,7 @@
 #pragma once
 
 // 通信履歴設定
-#define LORABBIT_HISTORY_SIZE 32
+#define LORABBIT_HISTORY_SIZE        32
 
 // TP 機能利用時のリトライ回数
 #define LORABBIT_TP_RETRY_COUNT      3

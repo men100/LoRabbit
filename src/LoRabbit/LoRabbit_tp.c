@@ -2,6 +2,7 @@
 #include "LoRabbit_tp.h"
 #include "LoRabbit_config.h"
 #include "LoRabbit_internal.h"
+#include "LoRabbit_util.h"
 #include <stdio.h>
 #include <string.h>
 #include <tm/tmonitor.h>
@@ -153,6 +154,29 @@ static ER lora_receive_and_validate_packet(
     return is_valid ? LORABBIT_OK : LORABBIT_ERROR_RETRY;
 }
 
+/**
+ * @brief ハンドル内のリングバッファに新しい通信ログを追加する
+ */
+static void lora_add_log_to_history(LoraHandle_t *p_handle, const LoraCommLog_t *p_log) {
+    memcpy(&p_handle->history[p_handle->history_index], p_log, sizeof(LoraCommLog_t));
+    p_handle->history_index++;
+    if (p_handle->history_index >= LORABBIT_HISTORY_SIZE) {
+        p_handle->history_index = 0;
+        p_handle->history_wrapped = true;
+    }
+}
+
+static const char* lora_tx_power_to_string(LoraTransmittingPower_t power) {
+    switch (power) {
+        case LORA_TRANSMITTING_POWER_13_DBM: return "13dBm";
+        case LORA_TRANSMITTING_POWER_7_DBM:  return "7dBm";
+        case LORA_TRANSMITTING_POWER_0_DBM:  return "0dBm";
+        default: return "Unknown";
+    }
+}
+
+// =====================================
+
 int LoRabbit_SendData(LoraHandle_t *p_handle,
                            uint16_t target_address,
                            uint8_t target_channel,
@@ -160,6 +184,15 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
                            uint32_t size,
                            bool request_ack)
 {
+    // ログ構造体を準備し、送信前パラメータを記録
+    LoraCommLog_t new_log;
+    memset(&new_log, 0, sizeof(new_log));
+    tk_get_tim(&new_log.timestamp);
+    new_log.data_size = size;
+    new_log.air_data_rate = p_handle->current_config.air_data_rate;
+    new_log.transmitting_power = p_handle->current_config.transmitting_power;
+    new_log.ack_requested = request_ack;
+
     if (size > LORABBIT_TP_MAX_TOTAL_SIZE) {
         return LORABBIT_ERROR_INVALID_ARGUMENT; // サイズ超過
     }
@@ -180,6 +213,10 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
 
         bool ack_received = false;
         for (uint8_t retry = 0; retry < LORABBIT_TP_RETRY_COUNT; retry++) {
+            if (retry > 0) {
+                new_log.total_retries++; // リトライ回数をカウント
+            }
+
             // ヘッダを組み立てる
             packet_buffer[0] = p_handle->current_config.own_address >> 8;
             packet_buffer[1] = p_handle->current_config.own_address & 0xFF;
@@ -219,6 +256,7 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
                     (ack_header.transaction_id == transaction_id) &&
                     (ack_header.packet_index == i))
                 {
+                    new_log.last_ack_rssi = ack_frame.rssi; // ACKのRSSIを記録
                     ack_received = true;
                     break; // 正しいACKを受信
                 }
@@ -226,12 +264,20 @@ int LoRabbit_SendData(LoraHandle_t *p_handle,
         } // retry loop
 
         if (!ack_received) {
+            // 最終結果を記録
+            new_log.ack_success = false;
+            lora_add_log_to_history(p_handle, &new_log);
+
             // 転送終了（失敗）を記録
             lora_status_set_idle(p_handle);
             return LORABBIT_ERROR_ACK_FAILED; // ACKタイムアウト
         }
         sent_size += packet_buffer[7]; // payload_len
     } // main loop
+
+    // 最終結果を記録
+    new_log.ack_success = true;
+    lora_add_log_to_history(p_handle, &new_log);
 
     // 転送終了（成功）を記録
     lora_status_set_idle(p_handle);
@@ -545,4 +591,49 @@ int LoRabbit_GetTransferStatus(LoraHandle_t *p_handle, LoRabbit_TransferStatus_t
     tk_sig_sem(p_handle->status_mutex_id, 1);
 
     return LORABBIT_OK;
+}
+
+void LoRabbit_DumpHistory(LoraHandle_t *p_handle) {
+    if (NULL == p_handle) {
+        LORA_PRINTF("p_handle is NULL.\n");
+        return;
+    }
+
+    LORA_PRINTF("\n--- LoRabbit Communication History ---\n");
+
+    // バッファが一周したかどうかに基づいて、表示するエントリ数と開始点を決定
+    uint8_t num_entries = p_handle->history_wrapped ? LORABBIT_HISTORY_SIZE : p_handle->history_index;
+    uint8_t start_index = p_handle->history_wrapped ? p_handle->history_index : 0;
+
+    if (num_entries == 0) {
+        LORA_PRINTF("No history yet.\n");
+        return;
+    }
+
+    LORA_PRINTF("Idx  | Timestamp  | Size | Rate         | Power | ACK Req/OK | RSSI | Retries\n");
+    LORA_PRINTF("-----+------------+------+--------------+-------+------------+------+--------\n");
+
+    for (uint8_t i = 0; i < num_entries; i++) {
+        uint8_t current_idx = (start_index + i) % LORABBIT_HISTORY_SIZE;
+        const LoraCommLog_t *p_log = &p_handle->history[current_idx];
+
+        int sf = get_spreading_factor_from_air_data_rate(p_log->air_data_rate);
+        int bw = (int)get_bandwidth_khz_from_air_data_rate(p_log->air_data_rate);
+
+        // 表示する際に、LORA_PRINTF側で文字列をフォーマットする
+        char rate_str[16];
+        snprintf(rate_str, sizeof(rate_str), "SF%d/%dkHz", sf, bw);
+
+        LORA_PRINTF("[%2u] | %10lu | %4lu | %-12s | %5s | %d / %-6d | %4d | %d\n",
+                    current_idx,
+                    p_log->timestamp.lo,
+                    p_log->data_size,
+                    rate_str, // フォーマットした文字列を使用
+                    lora_tx_power_to_string(p_log->transmitting_power),
+                    p_log->ack_requested,
+                    p_log->ack_success,
+                    p_log->last_ack_rssi,
+                    p_log->total_retries);
+    }
+    LORA_PRINTF("-------------------------------------\n");
 }

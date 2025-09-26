@@ -1,8 +1,9 @@
 #pragma once
 
-#include "hal_data.h"
 #include <stdint.h>
 #include <tk/tkernel.h>
+#include "LoRabbit_config.h"
+#include "hal_data.h"
 
 #define LORA_PIN_UNDEFINED (BSP_IO_PORT_FF_PIN_FF)
 
@@ -113,6 +114,24 @@ typedef struct {
     uint8_t  current_packet_index; // 現在処理中のパケット番号 (0から)
 } LoRabbit_TransferStatus_t;
 
+/**
+ * @brief 1回の通信結果を記録するログ構造体
+ */
+typedef struct {
+    SYSTIM   timestamp;            // 通信開始時刻
+    uint32_t data_size;            // 送信したオリジナルデータのサイズ
+
+    // 使用したパラメータ
+    LoraAirDateRate_t air_data_rate;
+    LoraTransmittingPower_t transmitting_power;
+
+    // 結果
+    bool     ack_requested;        // ACKを要求したか
+    bool     ack_success;          // 最終的な成功/失敗
+    int8_t   last_ack_rssi;        // 最後に成功したACKのRSSI値
+    uint8_t  total_retries;        // 全パケットの合計リトライ回数
+} LoraCommLog_t;
+
 // LoRaハンドルの本体（すべての状態を保持）
 #define LORA_RX_BUFFER_SIZE 256
 typedef struct s_LoraHandle {
@@ -141,6 +160,11 @@ typedef struct s_LoraHandle {
     // encoder, decoder 用 mutex
     ID encoder_mutex_id;
     ID decoder_mutex_id;
+
+    // 通信履歴を保存するリングバッファ
+    LoraCommLog_t history[LORABBIT_HISTORY_SIZE];
+    uint8_t       history_index;
+    bool          history_wrapped;
 } LoraHandle_t;
 
 // 受信フレーム構造体
