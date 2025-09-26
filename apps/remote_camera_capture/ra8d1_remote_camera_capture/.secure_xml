@@ -4,11 +4,11 @@
     <option key="#Board#" value="board.ra8d1ek"/>
     <option key="CPU" value="RA8D1"/>
     <option key="Core" value="CM85"/>
-    <option key="#TargetName#" value="R7FA8D1BHDCBD"/>
+    <option key="#TargetName#" value="R7FA8D1BHECBD"/>
     <option key="#TargetARCHITECTURE#" value="cortex-m85"/>
     <option key="#DeviceCommand#" value="R7FA8D1BH"/>
     <option key="#RTOS#" value="_none"/>
-    <option key="#pinconfiguration#" value="R7FA8D1BHDCBD.pincfg"/>
+    <option key="#pinconfiguration#" value="R7FA8D1BHECBD.pincfg"/>
     <option key="#FSPVersion#" value="5.9.0"/>
     <option key="#ConfigurationFragments#" value="Renesas##BSP##Board##ra8d1_ek##"/>
     <option key="#SELECTED_TOOLCHAIN#" value="gcc-arm-embedded"/>
@@ -181,8 +181,8 @@
       <configSetting altId="p600.output.low" configurationId="p600"/>
       <configSetting altId="p706.output.low" configurationId="p706"/>
       <configSetting altId="p809.output.low" configurationId="p809"/>
-      <configSetting altId="p810.input" configurationId="p810"/>
-      <configSetting altId="p811.input" configurationId="p811"/>
+      <configSetting altId="p810.output.low" configurationId="p810"/>
+      <configSetting altId="p811.output.low" configurationId="p811"/>
       <configSetting altId="p813.output.low" configurationId="p813"/>
       <configSetting altId="p907.input" configurationId="p907"/>
       <configSetting altId="pa01.output.high" configurationId="pa01"/>
