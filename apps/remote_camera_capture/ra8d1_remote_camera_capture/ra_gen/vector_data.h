@@ -6,7 +6,7 @@
         #endif
 /* Number of interrupts allocated */
 #ifndef VECTOR_DATA_IRQ_COUNT
-#define VECTOR_DATA_IRQ_COUNT    (18)
+#define VECTOR_DATA_IRQ_COUNT    (19)
 #endif
 /* ISR prototypes */
 void glcdc_line_detect_isr(void);
@@ -64,8 +64,10 @@ void sci_b_uart_eri_isr(void);
 #define SCI2_ERI_IRQn          ((IRQn_Type) 16) /* SCI2 ERI (Receive error) */
 #define VECTOR_NUMBER_ICU_IRQ1 ((IRQn_Type) 17) /* ICU IRQ1 (External pin interrupt 1) */
 #define ICU_IRQ1_IRQn          ((IRQn_Type) 17) /* ICU IRQ1 (External pin interrupt 1) */
+#define VECTOR_NUMBER_ICU_IRQ12 ((IRQn_Type) 18) /* ICU IRQ12 (External pin interrupt 12) */
+#define ICU_IRQ12_IRQn          ((IRQn_Type) 18) /* ICU IRQ12 (External pin interrupt 12) */
 /* The number of entries required for the ICU vector table. */
-#define BSP_ICU_VECTOR_NUM_ENTRIES (18)
+#define BSP_ICU_VECTOR_NUM_ENTRIES (19)
 
 #ifdef __cplusplus
         }

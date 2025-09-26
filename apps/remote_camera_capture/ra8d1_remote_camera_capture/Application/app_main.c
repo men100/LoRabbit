@@ -4,6 +4,8 @@
 #include "tglib.h"
 #include "r_sci_b_uart.h"
 
+#define LOG(...) tm_printf((UB*)__VA_ARGS__)
+
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart2;
 
@@ -18,6 +20,10 @@ void g_uart2_callback(uart_callback_args_t *p_args) {
 void g_irq1_callback(external_irq_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
     LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
+}
+
+void button_irq_callback(external_irq_callback_args_t *p_args) {
+    LOG("button_irq_callback\n");
 }
 
 int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
@@ -73,65 +79,26 @@ LOCAL T_CTSK ctsk_1 = {				// Task creation information
 
 LOCAL void task_1(INT stacd, void *exinf)
 {
-	UINT	x, y, w, h, dw, dh;
+    UH w, h;
 
 	tm_printf((UB*)"Start task-1\n");
+	tk_dly_tsk(TMO_FEVR);
 
-	tglib_init();				/* Init LCD */
-	tglib_onoff_lcd(LCD_ON);		/* LCD ON */
+	tglib_init();
+	tglib_onoff_lcd(LCD_ON);
 
-	/* Get display size */
+	// Get display size
 	w = tglib_get_width();
 	h = tglib_get_height();
 	tm_printf((UB*)"Width:%d  Height:%d\n", w, h);
 
+    tglib_clear_scr(TLIBLCD_COLOR_BLACK);
+
+	// 2倍の大きさで文字を描画する例
+	tglib_draw_string_scaled("Hello World!", 10, 10, TLIBLCD_COLOR_RED, 2);
+
+	//tglib_draw_buffer_scaled(rgb565_buffer, 10, 200, 32, 32, 8);
 	while(1) {
-		/* Cleare Screen */
-		tglib_clear_scr(TLIBLCD_COLOR_RED);
-		tk_dly_tsk(500);
-		tglib_clear_scr(TLIBLCD_COLOR_GREEN);
-		tk_dly_tsk(500);
-		tglib_clear_scr(TLIBLCD_COLOR_BLUE);
-		tk_dly_tsk(500);
-		tglib_clear_scr(TLIBLCD_COLOR_WHITE);
-		tk_dly_tsk(500);
-
-		/* Draw a color bar */
-		x = y = 0; dw = w/10; dh = h/10;
-		while(y<h) {
-			tglib_draw_rect(TLIBLCD_COLOR_RED, x, y, w, dh);
-			y += dh;
-			tglib_draw_rect(TLIBLCD_COLOR_GREEN, x, y, w, dh);
-			y += dh;
-			tglib_draw_rect(TLIBLCD_COLOR_BLUE, x, y, w, dh);
-			y += dh;
-			tglib_draw_rect(TLIBLCD_COLOR_WHITE, x, y, w, dh);
-			y += dh;
-			tglib_draw_rect(TLIBLCD_COLOR_BLACK, x, y, w, dh);
-			y += dh;
-		}
-
-		/* Draw a rectangle */
-		x = w/2 - dw/2; y = h/2 - dh/2; 
-		UINT ww = dw; UINT hh = dh;
-		for(UINT i = 0; i<2; i++) {
-			tglib_draw_rect(TLIBLCD_COLOR_RED, x, y, ww, hh);
-			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
-			tk_dly_tsk(200);
-
-			tglib_draw_rect(TLIBLCD_COLOR_GREEN, x, y, ww, hh);
-			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
-			tk_dly_tsk(200);
-
-			tglib_draw_rect(TLIBLCD_COLOR_BLUE, x, y, ww, hh);
-			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
-			tk_dly_tsk(200);
-
-			tglib_draw_rect(TLIBLCD_COLOR_WHITE, x, y, ww, hh);
-			x -= dw/2; y -= dh/2; ww += dw; hh += dh;
-			tk_dly_tsk(200);
-		}
-
 		tk_dly_tsk(300);
 	}
 }
