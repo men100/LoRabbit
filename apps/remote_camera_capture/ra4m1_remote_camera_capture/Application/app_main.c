@@ -60,13 +60,13 @@ int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
 
 // LoRa設定値
 LoraConfigItem_t s_config = {
-    .own_address              = 0x0000,
+    .own_address              = 0x2000,
     .baud_rate                = LORA_UART_BAUD_RATE_115200_BPS,
-    .air_data_rate            = LORA_AIR_DATA_RATE_1758_BPS_SF_9_BW_125,
+    .air_data_rate            = LORA_AIR_DATA_RATE_15625_BPS_SF_5_BW_125,
     .payload_size             = LORA_PAYLOAD_SIZE_200_BYTE,
     .rssi_ambient_noise_flag  = LORA_FLAG_ENABLED,
     .transmitting_power       = LORA_TRANSMITTING_POWER_13_DBM,
-    .own_channel              = 0,
+    .own_channel              = 0x02,
     .rssi_byte_flag           = LORA_FLAG_ENABLED,
     .transmission_method_type = LORA_TRANSMISSION_METHOD_TYPE_FIXED,
     .wor_cycle                = LORA_WOR_CYCLE_2000_MS,
