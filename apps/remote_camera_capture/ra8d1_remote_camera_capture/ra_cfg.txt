@@ -669,7 +669,7 @@ FSP Configuration
       Input: Graphics Layer 1: General: Horizontal position: 0
       Input: Graphics Layer 1: General: Vertical position: 0
       Input: Graphics Layer 1: Framebuffer: Framebuffer name: fb_background
-      Input: Graphics Layer 1: Framebuffer: Number of framebuffers: 2
+      Input: Graphics Layer 1: Framebuffer: Number of framebuffers: 1
       Input: Graphics Layer 1: Framebuffer: Section for framebuffer allocation: .sdram
       Input: Graphics Layer 1: General: Color format: RGB565 (16-bit)
       Input: Graphics Layer 1: General: Line descending mode: Disabled
@@ -683,7 +683,7 @@ FSP Configuration
       Input: Graphics Layer 2: General: Horizontal position: 0
       Input: Graphics Layer 2: General: Vertical position: 0
       Input: Graphics Layer 2: Framebuffer: Framebuffer name: fb_foreground
-      Input: Graphics Layer 2: Framebuffer: Number of framebuffers: 2
+      Input: Graphics Layer 2: Framebuffer: Number of framebuffers: 1
       Input: Graphics Layer 2: Framebuffer: Section for framebuffer allocation: .sdram
       Input: Graphics Layer 2: General: Color format: RGB565 (16-bit)
       Input: Graphics Layer 2: General: Line descending mode: Disabled
