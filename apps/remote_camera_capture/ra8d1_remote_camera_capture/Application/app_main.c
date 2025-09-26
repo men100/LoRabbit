@@ -6,11 +6,26 @@
 
 #define LOG(...) tm_printf((UB*)__VA_ARGS__)
 
+// サーバーのアドレスとチャンネル
+#define SERVER_ADDRESS 0x0000
+#define SERVER_CHANNEL 0x00
+
+// 要求プロトコルの定義
+#define REQUEST_PACKET_SIZE   4
+#define REQUEST_FLAG_GET_DATA 0x01
+
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart2;
 
 // アプリケーションでLoRaハンドルの実体を定義
 static LoraHandle_t s_lora_handle;
+
+// ボタン押下をタスクに通知するためのセマフォ
+static ID s_button_s2_press_sem_id;
+
+// サーバーから受信した大容量データを格納するバッファ
+#define DATA_BUFFER_SIZE 3072
+static uint8_t s_received_data_buffer[DATA_BUFFER_SIZE];
 
 void g_uart2_callback(uart_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
@@ -23,7 +38,7 @@ void g_irq1_callback(external_irq_callback_args_t *p_args) {
 }
 
 void button_irq_callback(external_irq_callback_args_t *p_args) {
-    LOG("button_irq_callback\n");
+    tk_sig_sem(s_button_s2_press_sem_id, 1);
 }
 
 int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
@@ -77,30 +92,96 @@ LOCAL T_CTSK ctsk_1 = {				// Task creation information
 	.tskatr		= TA_HLNG | TA_RNG3,
 };
 
+LOCAL void task_2(INT stacd, void *exinf);  // task execution function
+LOCAL ID    tskid_2;            // Task ID number
+LOCAL T_CTSK ctsk_2 = {             // Task creation information
+    .itskpri    = 10,
+    .stksz      = 1024,
+    .task       = task_2,
+    .tskatr     = TA_HLNG | TA_RNG3,
+};
+
 LOCAL void task_1(INT stacd, void *exinf)
 {
-    UH w, h;
+    LoRabbit_TransferStatus_t status;
 
-	tm_printf((UB*)"Start task-1\n");
-	tk_dly_tsk(TMO_FEVR);
+    while(1) {
+        tm_printf((UB*)"task 1\n");
 
-	tglib_init();
-	tglib_onoff_lcd(LCD_ON);
+        // Inverts the LED on the board.
+        out_h(PORT_PODR(6), in_h(PORT_PODR(6))^(1<<0));     // BLUE
+        out_h(PORT_PODR(4), in_h(PORT_PODR(4))^(1<<14));    // GREEN
+        out_h(PORT_PODR(1), in_h(PORT_PODR(1))^(1<<7));     // RED
 
-	// Get display size
-	w = tglib_get_width();
-	h = tglib_get_height();
-	tm_printf((UB*)"Width:%d  Height:%d\n", w, h);
+        if (LoRabbit_GetTransferStatus(&s_lora_handle, &status) == LORABBIT_OK) {
+            if (status.is_active) {
+                tm_printf((UB*)"LoRa Transferring: Packet %d / %d\n",
+                          status.total_packets == 0 ? 0 : status.current_packet_index + 1,
+                          status.total_packets);
+            } else {
+                tm_printf((UB*)"LoRa Idle.\n");
+            }
+        }
+        tk_dly_tsk(1000);
+    }
+}
 
-    tglib_clear_scr(TLIBLCD_COLOR_BLACK);
+LOCAL void task_2(INT stacd, void *exinf)
+{
+    // ボタン通知用セマフォを生成
+    T_CSEM csem = { .exinf = 0, .sematr = TA_TFIFO, .isemcnt = 0, .maxsem = 1 };
+    s_button_s2_press_sem_id = tk_cre_sem(&csem);
 
-	// 2倍の大きさで文字を描画する例
-	tglib_draw_string_scaled("Hello World!", 10, 10, TLIBLCD_COLOR_RED, 2);
+    // 通常モードに移行して送信開始
+    tm_putstring((UB*)"Switching to Normal Mode.\n");
+    LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
-	//tglib_draw_buffer_scaled(rgb565_buffer, 10, 200, 32, 32, 8);
-	while(1) {
-		tk_dly_tsk(300);
-	}
+    LOG("LoRa Client Task Started.\n");
+
+    while(1) {
+        LOG("\n### Press the user button (SW2) to request data from the server. ###\n");
+
+        // ボタンが押されるのをセマフォで待つ
+        tk_wai_sem(s_button_s2_press_sem_id, 1, TMO_FEVR);
+
+        LOG("Button pressed! Sending data request to server 0x%04X...\n", SERVER_ADDRESS);
+
+        // サーバーへの要求パケットを組み立てる
+        uint8_t request_packet[REQUEST_PACKET_SIZE];
+        // 自分のアドレスとチャンネルをペイロードに含める
+        request_packet[0] = s_lora_handle.current_config.own_address >> 8;
+        request_packet[1] = s_lora_handle.current_config.own_address & 0xFF;
+        request_packet[2] = s_lora_handle.current_config.own_channel;
+        request_packet[3] = REQUEST_FLAG_GET_DATA;
+
+        // 要求パケットを送信 (短いデータなのでSendFrameを使用)
+        ER err = LoRabbit_SendFrame(&s_lora_handle,
+                                    SERVER_ADDRESS,
+                                    SERVER_CHANNEL,
+                                    request_packet,
+                                    sizeof(request_packet));
+        if (err != LORABBIT_OK) {
+            LOG("Failed to send request packet. Error: %d\n", err);
+            continue; // エラーなら最初に戻る
+        }
+
+        LOG("Request sent. Waiting for large data response...\n");
+
+        // サーバーからの大容量データの応答を受信する
+        uint32_t received_len = 0;
+        err = LoRabbit_ReceiveData(&s_lora_handle,
+                                   s_received_data_buffer,
+                                   sizeof(s_received_data_buffer),
+                                   &received_len,
+                                   15000); // 15秒のタイムアウト
+
+        // 受信結果を処理
+        if (err == LORABBIT_OK) {
+            LOG("Successfully received large data! Size: %lu bytes\n", received_len);
+        } else {
+            LOG("Failed to receive large data. Error: %d\n", err);
+        }
+    }
 }
 
 /* usermain関数 */
@@ -130,9 +211,12 @@ EXPORT INT usermain(void)
     }
     tm_putstring((UB*)"LoRa Init Success!\n");
 
-	/* Create & Start Tasks */
+	//* Create & Start Tasks
 	tskid_1 = tk_cre_tsk(&ctsk_1);
 	tk_sta_tsk(tskid_1, 0);
+
+    tskid_2 = tk_cre_tsk(&ctsk_2);
+    tk_sta_tsk(tskid_2, 0);
 
 	tk_slp_tsk(TMO_FEVR);
 

@@ -3,19 +3,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <LoRabbit.h>
-#include <ArducamCamera.h>
+#include "camera.h"
 #include "r_sci_uart.h"
 
 #define LOG(...) tm_printf((UB*)__VA_ARGS__)
 
+#define REQUEST_PACKET_MIN_SIZE 4
+#define REQUEST_FLAG_GET_DATA   0x01
+
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart0;
 
-// Camera インスタンス
-ArducamCamera myCamera;
-
 // アプリケーションでLoRaハンドルの実体を定義
 static LoraHandle_t s_lora_handle;
+
+// 96x95 から 32x32 に縮小されたカメラデータ (RGB565)
+extern uint16_t resized_image[DST_WIDTH * DST_HEIGHT];
 
 void g_uart0_callback(uart_callback_args_t *p_args) {
     // ライブラリ提供のハンドラを呼び出し、処理を委譲する
@@ -83,32 +86,10 @@ LOCAL void task_2(INT stacd, void *exinf);  // task execution function
 LOCAL ID    tskid_2;            // Task ID number
 LOCAL T_CTSK ctsk_2 = {             // Task creation information
     .itskpri    = 10,
-    .stksz      = 1024,
+    .stksz      = 2048,
     .task       = task_2,
     .tskatr     = TA_HLNG | TA_RNG3,
 };
-
-// 送信用バッファ、作業用バッファ
-#define BUFFER_SIZE 512
-uint8_t send_buffer[BUFFER_SIZE];
-uint8_t work_buffer[BUFFER_SIZE];
-
-void camera_init(void) {
-    // SPI CS (Chip Select) ピン
-    const int cs = P413_SPI0_CS;
-
-    // カメラライブラリを初期化
-    arducamCameraInit(&myCamera, cs);
-
-    if (myCamera.arducamCameraOp->begin(&myCamera) != CAM_ERR_SUCCESS) {
-        LOG("ERROR: Camera initialization failed.\n");
-        while(1); // 初期化に失敗したら停止
-    }
-    LOG("Camera initialization successful.\n");
-
-    // 動作確認として Sensor ID を表示
-    LOG("Sensor ID: 0x%02X (Expected: 0x81 for 5MP, 0x82 for 3MP (legacy models)\n", myCamera.cameraId);
-}
 
 LOCAL void task_1(INT stacd, void *exinf)
 {
@@ -131,34 +112,63 @@ LOCAL void task_1(INT stacd, void *exinf)
 
 LOCAL void task_2(INT stacd, void *exinf)
 {
-    // 初期化
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-        send_buffer[i] = i;
-    }
-
-    // 通常モードに移行して送信開始
+    // 通常モードに移行して受信開始
     tm_putstring((UB*)"Switching to Normal Mode.\n");
     LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
-    while(1) {
-        LOG("task 2\n");
+    // 受信した要求パケットを格納するフレーム
+    RecvFrameE220900T22SJP_t request_frame;
 
-        LOG("Sending\n");
-        int result = LoRabbit_SendCompressedData(&s_lora_handle,
-                                                 0x00,
-                                                 0,
-                                                 send_buffer,
-                                                 BUFFER_SIZE,
-                                                 true,
-                                                 work_buffer,
-                                                 BUFFER_SIZE);
-        if (result == 0) {
-            LOG("LoRa_SendCompressedData success\n");
-        } else {
-            LOG("LoRa_SendCompressedData failed with code: %d\n", result);
-            return;
-        }
-        tk_dly_tsk(5000);
+    // サーバーとして無限ループ
+    while(1) {
+        LOG("Waiting for a data request...\n");
+
+       // クライアントからのデータ要求を待つ
+       int recv_len = LoRabbit_ReceiveFrame(&s_lora_handle, &request_frame, TMO_FEVR);
+
+       // パケット長をチェック
+       if (recv_len < REQUEST_PACKET_MIN_SIZE) {
+           if (recv_len <= 0) {
+               LOG("ReceiveFrame error or timeout. Restarting wait.\n");
+           } else {
+               LOG("Received a packet, but too short. Ignoring.\n");
+           }
+           continue;
+       }
+
+       // 要求パケットから送信元（クライアント）と要求内容を特定
+       uint16_t client_address = (uint16_t)(request_frame.recv_data[0] << 8) | request_frame.recv_data[1];
+       uint8_t  client_channel = request_frame.recv_data[2];
+       uint8_t  request_flag   = request_frame.recv_data[3];
+
+       // 要求フラグを検証
+       if (request_flag == REQUEST_FLAG_GET_DATA) {
+           LOG("Received data request from client 0x%04X on channel 0x%02X.\n", client_address, client_channel);
+
+           // 撮影を行う
+           camera_take_picture();
+
+           LOG("Sending large data payload (%u bytes) to Address:0x%04x, Channel:0x%02x\n",
+                   sizeof(resized_image), client_address, client_channel);
+
+           // 大容量データを、パースした送信元に対して送信する
+           ER err = LoRabbit_SendData(&s_lora_handle,
+                                      client_address, // パースしたアドレスを使用
+                                      client_channel, // パースしたチャンネルを使用
+                                      (uint8_t*)resized_image,
+                                      sizeof(resized_image),
+                                      true); // ACKを要求
+
+           if (err == LORABBIT_OK) {
+               LOG("Successfully sent large data to 0x%04X.\n", client_address);
+           } else {
+               LOG("Failed to send large data to 0x%04X. Error code: %d\n", client_address, err);
+           }
+       }
+       else
+       {
+           LOG("Received packet with unknown request flag (0x%02X). Ignoring.\n", request_flag);
+       }
     }
 }
 
@@ -166,10 +176,9 @@ LOCAL void task_2(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
     LOG("Start User-main program.\n");
+    LOG("ra4m1_remote_camer_capture\n");
 
-    LOG("LoRa send test\n");
-
-    // カメラライブラリを初期化
+    // カメラの初期化 (失敗したらここで停止)
     camera_init();
 
     // ハードウェア構成を定義
@@ -193,7 +202,7 @@ EXPORT INT usermain(void)
     }
     LOG("LoRa Init Success!\n");
 
-    /* Create & Start Tasks */
+    // Create & Start Tasks
     tskid_1 = tk_cre_tsk(&ctsk_1);
     tk_sta_tsk(tskid_1, 0);
 
