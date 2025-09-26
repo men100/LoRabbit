@@ -164,6 +164,8 @@ LOCAL void task_2(INT stacd, void *exinf)
            } else {
                LOG("Failed to send large data to 0x%04X. Error code: %d\n", client_address, err);
            }
+
+           LoRabbit_DumpHistory(&s_lora_handle);
        }
        else
        {
