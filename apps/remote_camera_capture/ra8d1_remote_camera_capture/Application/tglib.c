@@ -475,7 +475,13 @@ void tglib_draw_buffer(const UH *buffer, UW posX, UW posY, UW width, UW height)
 
         // 1行分のピクセルデータをコピー（色反転も適用）
         for (UW i = 0; i < copy_width; i++) {
-            p_dst[i] = ~p_src[i];
+            UH pixel = p_src[i];
+
+            // 上位8bitと下位8bitを入れ替える
+            UH swapped_pixel = (pixel << 8) | (pixel >> 8);
+
+            // ビット反転して書き込む
+            p_dst[i] = ~swapped_pixel;
         }
     }
 
@@ -504,11 +510,13 @@ void tglib_draw_buffer_scaled(const UH *buffer, UW posX, UW posY, UW width, UW h
     // 元バッファの各ピクセルをループ
     for (UW y = 0; y < height; y++) {
         for (UW x = 0; x < width; x++) {
-            // 元バッファから1ピクセルの色を取得
             UH pixel_color = buffer[y * width + x];
 
+            // 上位8bitと下位8bitを入れ替える
+            UH swapped_color = (pixel_color << 8) | (pixel_color >> 8);
+
             // 拡大後の座標を計算し、scale x scale の矩形を描画
-            draw_rect(pixel_color, posX + (x * scale), posY + (y * scale), scale, scale);
+            draw_rect(swapped_color, posX + (x * scale), posY + (y * scale), scale, scale);
         }
     }
 
