@@ -430,18 +430,14 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
     int frame_size = 3 + size;
 
 #if 0 // print debug
-      for (int i = 0; i < 3 + size; i++) {
-        if (i < 3) {
-            LORA_PRINTF("%02x", frame[i]);
-        } else {
-            LORA_PRINTF("%c", frame[i]);
-        }
-      }
-      LORA_PRINTF("\n");
+    for (int i = 0; i < 3 + size; i++) {
+        LORA_PRINTF("0x%02x ", frame[i]);
+    }
+    LORA_PRINTF("\n");
 #endif
 
 #ifdef LORABBIT_USE_AUX_IRQ
-    //  送信前にステートを設定 ★★★
+    //  送信前にステートを設定
     if (LORA_PIN_UNDEFINED != p_handle->hw_config.aux) {
         p_handle->state = LORA_STATE_WAITING_TX;
     }
