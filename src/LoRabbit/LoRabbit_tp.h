@@ -85,3 +85,15 @@ int LoRabbit_GetTransferStatus(LoraHandle_t *p_handle, LoRabbit_TransferStatus_t
  * @param[in] p_handle 操作対象のハンドル
  */
 void LoRabbit_DumpHistory(LoraHandle_t *p_handle);
+
+/**
+ * @brief 現在ハンドルに蓄積されている通信履歴をCSV形式でコンソールに出力する
+ * @param[in] p_handle 操作対象のハンドル
+ */
+int LoRabbit_ExportHistoryCSV(LoraHandle_t *p_handle);
+
+/**
+ * @brief ハンドル内の通信履歴リングバッファをクリアする
+ * @param[in] p_handle 操作対象のハンドル
+ */
+int LoRabbit_ClearHistory(LoraHandle_t *p_handle);

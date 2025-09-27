@@ -640,3 +640,40 @@ void LoRabbit_DumpHistory(LoraHandle_t *p_handle) {
     }
     LORA_PRINTF("-------------------------------------\n");
 }
+
+int LoRabbit_ExportHistoryCSV(LoraHandle_t *p_handle) {
+    // CSVヘッダを出力
+    LORA_PRINTF("timestamp_lo,data_size,air_data_rate,transmitting_power,ack_requested,ack_success,last_ack_rssi,total_retries\n");
+
+    // ログデータをカンマ区切りで出力
+    uint8_t num_entries = p_handle->history_wrapped ? LORABBIT_HISTORY_SIZE : p_handle->history_index;
+    uint8_t start_index = p_handle->history_wrapped ? p_handle->history_index : 0;
+
+    for (uint8_t i = 0; i < num_entries; i++) {
+        uint8_t current_idx = (start_index + i) % LORABBIT_HISTORY_SIZE;
+        const LoraCommLog_t *p_log = &p_handle->history[current_idx];
+
+        // enumの値は、Pythonなどで扱いやすいように整数値として出力
+        LORA_PRINTF("%lu,%lu,%d,%d,%d,%d,%d,%d\n",
+                    p_log->timestamp.lo,
+                    p_log->data_size,
+                    (int)p_log->air_data_rate,
+                    (int)p_log->transmitting_power,
+                    (int)p_log->ack_requested,
+                    (int)p_log->ack_success,
+                    (int)p_log->last_ack_rssi,
+                    (int)p_log->total_retries);
+    }
+
+    return LORABBIT_OK;
+}
+
+int LoRabbit_ClearHistory(LoraHandle_t *p_handle) {
+    memset(p_handle->history, 0, sizeof(p_handle->history));
+    p_handle->history_index = 0;
+    p_handle->history_wrapped = false;
+
+    LORA_PRINTF("Communication history cleared.\n");
+
+    return LORABBIT_OK;
+}
