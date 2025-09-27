@@ -328,6 +328,46 @@ receive_complete:
 #endif
 }
 
+ER lora_send_frame_fire_and_forget_internal(LoraHandle_t *p_handle,
+                                            uint16_t target_address,
+                                            uint8_t target_channel,
+                                            uint8_t *p_send_data,
+                                            int size)
+{
+    const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
+    const LoraConfigItem_t *p_config = &p_handle->current_config;
+    if (NULL == p_uart || NULL == p_config) {
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
+    }
+
+    uint8_t payload_size = 0;
+    switch (p_config->payload_size) {
+        case LORA_PAYLOAD_SIZE_200_BYTE: payload_size = 200; break;
+        case LORA_PAYLOAD_SIZE_128_BYTE: payload_size = 128; break;
+        case LORA_PAYLOAD_SIZE_64_BYTE: payload_size = 64; break;
+        case LORA_PAYLOAD_SIZE_32_BYTE: payload_size = 32; break;
+    }
+    if (size > payload_size) {
+        LORA_PRINTF("send data length too long\n");
+        return LORABBIT_ERROR_INVALID_ARGUMENT;
+    }
+
+    uint8_t frame[3 + 197]; // 最大サイズでバッファ確保
+    frame[0] = target_address >> 8;
+    frame[1] = target_address & 0xff;
+    frame[2] = target_channel;
+    memcpy(frame + 3, p_send_data, size);
+    int frame_size = 3 + size;
+
+    p_uart->p_api->write(p_uart->p_ctrl, frame, frame_size);
+    // 書き込み後、待たない
+    
+    // 短いdelayで送信処理の開始を待つ
+    tk_dly_tsk(10);
+
+    return LORABBIT_OK;
+}
+
 int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t target_channel, uint8_t *p_send_data, int size) {
     int err = 0;
     const uart_instance_t *p_uart = p_handle->hw_config.p_uart;
@@ -374,7 +414,7 @@ int LoRabbit_SendFrame(LoraHandle_t *p_handle, uint16_t target_address, uint8_t 
     if (err < 0) {
         LORA_PRINTF("LoRa_SendFrame: lora_wait_for_tx_done timeout\n");
     }
-    
+
     // 送信後にモジュールから応答データが返る場合があるため、バッファをクリア
     while (lora_available(p_handle)) {
         lora_read(p_handle);

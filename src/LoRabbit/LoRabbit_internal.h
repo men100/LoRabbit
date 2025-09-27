@@ -10,3 +10,10 @@
 #else
     #define LORA_PRINTF(...) ((void)0)
 #endif
+
+/** @internal HAL層：LoRaフレームを送信するが、完了を待たない */
+ER lora_send_frame_fire_and_forget_internal(LoraHandle_t *p_handle,
+                                            uint16_t target_address,
+                                            uint8_t target_channel,
+                                            uint8_t *p_send_data,
+                                            int size);

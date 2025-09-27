@@ -59,10 +59,13 @@ static int lora_send_ack(LoraHandle_t *p_handle, LoRabbitTP_Header_t *p_data_hea
     ack_payload[6] = p_data_header->packet_index;
     ack_payload[7] = 0; // ペイロード長
 
-    // ACKを送信
-    return LoRabbit_SendFrame(p_handle, p_data_header->source_address, p_data_header->source_channel, ack_payload, sizeof(ack_payload));
+    // ACK を送信 (待機なし)
+    return lora_send_frame_fire_and_forget_internal(p_handle,
+                                                    p_data_header->source_address,
+                                                    p_data_header->source_channel,
+                                                    ack_payload,
+                                                    sizeof(ack_payload));
 }
-
 
 /**
  * @brief 転送状態を「実行中」に設定するヘルパー
