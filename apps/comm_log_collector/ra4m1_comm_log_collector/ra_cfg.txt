@@ -110,7 +110,7 @@ FSP Configuration
       P101 74 SCI0_TXD_MOSI0 - Low None "Peripheral mode" CMOS None "ADC0: AN21; AGT0: AGTEE; CMP0: CMPREF0; GPT5: GTIOCA; IIC1: SDA; IRQ0: IRQ01; KINT0: KRM1; POEG1: GTETRG; SCI0: SDA; SCI0: TXD_MOSI; SCI1: CTS_RTS_SS; SLCDC0: VL2; SPI0: MOSI" - IO - - 
       P102 73 - - - - Disabled - - "ADC0: ADTRG; ADC0: AN20; AGT0: AGTO; CAN0: CRX; CMP0: CMPIN1; GPT2: GTIOCB; KINT0: KRM2; OPS0: GTOWLO; SCI0: SCK; SCI2: SDA; SCI2: TXD_MOSI; SLCDC0: VL3; SPI0: RSPCK" - なし - - 
       P103 72 - - - - Disabled - - "ADC0: AN19; CAN0: CTX; CMP0: CMPREF1; GPT2: GTIOCA; KINT0: KRM3; OPS0: GTOWUP; SCI0: CTS_RTS_SS; SLCDC0: VL4; SPI0: SSL0" - なし - - 
-      P104 71 - - - - Disabled - - "CTSU0: TS13; GPT1: GTIOCB; IRQ0: IRQ01; KINT0: KRM4; POEG1: GTETRG; SCI0: RXD_MISO; SCI0: SCL; SLCDC0: COM0; SPI0: SSL1" - なし - - 
+      P104 71 IRQ0_IRQ01 - - IRQ1 "IRQ mode" - "input pull-up" "CTSU0: TS13; GPT1: GTIOCB; IRQ0: IRQ01; KINT0: KRM4; POEG1: GTETRG; SCI0: RXD_MISO; SCI0: SCL; SLCDC0: COM0; SPI0: SSL1" - IO - - 
       P105 70 IRQ0_IRQ00 P105_INT - IRQ0 "IRQ mode" - None "CTSU0: TS34; GPT1: GTIOCA; IRQ0: IRQ00; KINT0: KRM5; POEG0: GTETRG; SLCDC0: COM1; SPI0: SSL2" - IO - - 
       P106 69 - - - - Disabled - - "GPT0: GTIOCB; KINT0: KRM6; SLCDC0: COM2; SPI0: SSL3" - なし - - 
       P107 68 - - - - Disabled - - "GPT0: GTIOCA; KINT0: KRM7; SLCDC0: COM3" - なし - - 
@@ -256,11 +256,11 @@ FSP Configuration
     Instance "g_external_irq0 External IRQ (r_icu)"
       Name: g_external_irq0
       Channel: 0
-      Trigger: Both Edges
+      Trigger: Falling
       Digital Filtering: Disabled
       Filter Source: PCLK filter
       Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
-      Callback: g_irq0_callback
+      Callback: g_irq1_callback
       Pin Interrupt Priority: Priority 13
       
     Instance "g_spi0 SPI (r_spi)"
@@ -287,4 +287,14 @@ FSP Configuration
       Clock Delay: 1 Clock
       SSL Negation Delay: 1 Clock
       Next Access Delay: 1 Clock
+      
+    Instance "g_external_irq1 External IRQ (r_icu)"
+      Name: g_external_irq1
+      Channel: 1
+      Trigger: Rising
+      Digital Filtering: Enabled
+      Filter Source: PCLK filter
+      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
+      Callback: g_irq1_callback
+      Pin Interrupt Priority: Priority 12
       

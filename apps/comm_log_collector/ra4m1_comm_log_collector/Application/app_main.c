@@ -26,6 +26,10 @@ void g_irq0_callback(external_irq_callback_args_t *p_args) {
     LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
 }
 
+void g_irq1_callback(external_irq_callback_args_t *p_args) {
+    LOG("g_irq1_callback\n");
+}
+
 int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
     fsp_err_t err = FSP_SUCCESS;
     uart_instance_t const *p_uart = p_handle->hw_config.p_uart;

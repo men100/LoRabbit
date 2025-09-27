@@ -50,6 +50,7 @@
       <configSetting altId="debug0.tdo.p109" configurationId="debug0.tdo" isUsedByDriver="true" peripheral="DEBUG0"/>
       <configSetting altId="debug0.tms.p108" configurationId="debug0.tms" isUsedByDriver="true" peripheral="DEBUG0"/>
       <configSetting altId="irq0.irq00.p105" configurationId="irq0.irq00" isUsedByDriver="true" peripheral="IRQ0"/>
+      <configSetting altId="irq0.irq01.p104" configurationId="irq0.irq01" isUsedByDriver="true" peripheral="IRQ0"/>
       <configSetting altId="p111.output.low" configurationId="p111"/>
       <configSetting altId="p303.output.low" configurationId="p303"/>
       <configSetting altId="p304.output.low" configurationId="p304"/>
