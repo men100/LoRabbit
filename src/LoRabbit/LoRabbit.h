@@ -161,6 +161,9 @@ typedef struct s_LoraHandle {
     ID encoder_mutex_id;
     ID decoder_mutex_id;
 
+    // ライブラリ全体を保護する mutex
+    ID api_mutex_id;
+
     // 通信履歴を保存するリングバッファ
     LoraCommLog_t history[LORABBIT_HISTORY_SIZE];
     uint8_t       history_index;

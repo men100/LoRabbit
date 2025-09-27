@@ -204,15 +204,22 @@ int LoRabbit_Init(LoraHandle_t *p_handle, LoraHwConfig_t const *p_hw_config) {
     // エンコーダ用ミューテックス
     p_handle->encoder_mutex_id = tk_cre_sem(&csem_mutex);
     if (p_handle->encoder_mutex_id < LORABBIT_OK) {
-        LORA_PRINTF("LoRa_Init: tk_cre_sem for encoder_mutex_id failed(%d)\n", p_handle->rx_start_sem_id);
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for encoder_mutex_id failed(%d)\n", p_handle->encoder_mutex_id);
         return p_handle->encoder_mutex_id;
     }
 
     // デコーダ用ミューテックス
     p_handle->decoder_mutex_id = tk_cre_sem(&csem_mutex);
     if (p_handle->decoder_mutex_id < LORABBIT_OK) {
-        LORA_PRINTF("LoRa_Init: tk_cre_sem for decoder_mutex_id failed(%d)\n", p_handle->rx_start_sem_id);
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for decoder_mutex_id failed(%d)\n", p_handle->decoder_mutex_id);
         return p_handle->decoder_mutex_id;
+    }
+
+    // ライブラリ保護ミューテックス
+    p_handle->api_mutex_id = tk_cre_sem(&csem_mutex);
+    if (p_handle->api_mutex_id < LORABBIT_OK) {
+        LORA_PRINTF("LoRa_Init: tk_cre_sem for api_mutex_id failed(%d)\n", p_handle->api_mutex_id);
+        return p_handle->api_mutex_id;
     }
 
     return LORABBIT_OK;
