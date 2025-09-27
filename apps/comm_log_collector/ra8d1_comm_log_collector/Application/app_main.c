@@ -50,6 +50,10 @@ void button_irq_callback(external_irq_callback_args_t *p_args) {
     tk_sig_sem(s_button_s2_press_sem_id, 1);
 }
 
+void button_s1_irq_callback(external_irq_callback_args_t *p_args) {
+    LOG("s1 pressed\n");
+}
+
 int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
     fsp_err_t err = FSP_SUCCESS;
     uart_instance_t const *p_uart = p_handle->hw_config.p_uart;

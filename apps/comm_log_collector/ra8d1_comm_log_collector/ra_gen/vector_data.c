@@ -23,6 +23,7 @@
             [16] = sci_b_uart_eri_isr, /* SCI2 ERI (Receive error) */
             [17] = r_icu_isr, /* ICU IRQ1 (External pin interrupt 1) */
             [18] = r_icu_isr, /* ICU IRQ12 (External pin interrupt 12) */
+            [19] = r_icu_isr, /* ICU IRQ13 (External pin interrupt 13) */
         };
         #if BSP_FEATURE_ICU_HAS_IELSR
         const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_NUM_ENTRIES] =
@@ -46,6 +47,7 @@
             [16] = BSP_PRV_VECT_ENUM(EVENT_SCI2_ERI,GROUP0), /* SCI2 ERI (Receive error) */
             [17] = BSP_PRV_VECT_ENUM(EVENT_ICU_IRQ1,GROUP1), /* ICU IRQ1 (External pin interrupt 1) */
             [18] = BSP_PRV_VECT_ENUM(EVENT_ICU_IRQ12,GROUP2), /* ICU IRQ12 (External pin interrupt 12) */
+            [19] = BSP_PRV_VECT_ENUM(EVENT_ICU_IRQ13,GROUP3), /* ICU IRQ13 (External pin interrupt 13) */
         };
         #endif
         #endif

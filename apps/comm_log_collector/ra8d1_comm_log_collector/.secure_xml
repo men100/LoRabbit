@@ -152,6 +152,7 @@
       <configSetting altId="iic1.sda1.p511" configurationId="iic1.sda1" isUsedByDriver="true" peripheral="IIC1"/>
       <configSetting altId="irq1.irq1.p508" configurationId="irq1.irq1" isUsedByDriver="true" peripheral="IRQ1"/>
       <configSetting altId="irq12.irq12_dash_ds.p008" configurationId="irq12.irq12_dash_ds" isUsedByDriver="true" peripheral="IRQ12"/>
+      <configSetting altId="irq13.irq13_dash_ds.p009" configurationId="irq13.irq13_dash_ds" isUsedByDriver="true" peripheral="IRQ13"/>
       <configSetting altId="irq3.irq3.p510" configurationId="irq3.irq3" isUsedByDriver="true" peripheral="IRQ3"/>
       <configSetting altId="jtag_fslash_swd.tck.p211" configurationId="jtag_fslash_swd.tck" peripheral="JTAG/SWD"/>
       <configSetting altId="jtag_fslash_swd.tdi.p208" configurationId="jtag_fslash_swd.tdi" peripheral="JTAG/SWD"/>

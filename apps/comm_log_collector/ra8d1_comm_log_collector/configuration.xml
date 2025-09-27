@@ -139,7 +139,7 @@
     </config>
     <config id="config.bsp.ra">
       <property id="config.bsp.common.main" value="0x400"/>
-      <property id="config.bsp.common.heap" value="0"/>
+      <property id="config.bsp.common.heap" value="1024"/>
       <property id="config.bsp.common.vcc" value="3300"/>
       <property id="config.bsp.common.checking" value="config.bsp.common.checking.disabled"/>
       <property id="config.bsp.common.assert" value="config.bsp.common.assert.none"/>
@@ -666,6 +666,16 @@
       <property id="module.driver.external_irq.p_callback" value="button_irq_callback"/>
       <property id="module.driver.external_irq.ipl" value="board.icu.common.irq.priority12"/>
     </module>
+    <module id="module.driver.external_irq_on_icu.1403727447">
+      <property id="module.driver.external_irq.name" value="g_external_irq13"/>
+      <property id="module.driver.external_irq.channel" value="13"/>
+      <property id="module.driver.external_irq.trigger" value="module.driver.external_irq.trigger.trig_falling"/>
+      <property id="module.driver.external_irq.filter_enable" value="module.driver.external_irq.filter_enable.false"/>
+      <property id="module.driver.external_irq.filter_source" value="module.driver.external_irq.filter_source.pclk"/>
+      <property id="module.driver.external_irq.clock_source_div" value="module.driver.external_irq.clock_source_div.clock_source_div_by_64"/>
+      <property id="module.driver.external_irq.p_callback" value="button_s1_irq_callback"/>
+      <property id="module.driver.external_irq.ipl" value="board.icu.common.irq.priority12"/>
+    </module>
     <context id="_hal.0">
       <stack module="module.driver.ioport_on_ioport.0"/>
       <stack module="module.driver.display_on_glcdc.1958109664">
@@ -679,6 +689,7 @@
       <stack module="module.driver.uart_on_sci_b_uart.172048716"/>
       <stack module="module.driver.external_irq_on_icu.1803042365"/>
       <stack module="module.driver.external_irq_on_icu.180917553"/>
+      <stack module="module.driver.external_irq_on_icu.1403727447"/>
     </context>
     <config id="config.driver.sci_b_uart">
       <property id="config.driver.sci_b_uart.param_checking_enable" value="config.driver.sci_b_uart.param_checking_enable.bsp"/>
@@ -939,6 +950,8 @@
       <configSetting altId="irq1.mode.custom.free" configurationId="irq1.mode"/>
       <configSetting altId="irq12.irq12_dash_ds.p008" configurationId="irq12.irq12_dash_ds"/>
       <configSetting altId="irq12.mode.custom.free" configurationId="irq12.mode"/>
+      <configSetting altId="irq13.irq13_dash_ds.p009" configurationId="irq13.irq13_dash_ds"/>
+      <configSetting altId="irq13.mode.custom.free" configurationId="irq13.mode"/>
       <configSetting altId="irq3.irq3.p510" configurationId="irq3.irq3"/>
       <configSetting altId="irq3.mode.custom.free" configurationId="irq3.mode"/>
       <configSetting altId="jtag_fslash_swd.mode.jtag.free" configurationId="jtag_fslash_swd.mode"/>
@@ -975,6 +988,9 @@
       <configSetting altId="p008.irq12.irq12_dash_ds" configurationId="p008"/>
       <configSetting altId="p008.gpio_irq.gpio_irq_enabled" configurationId="p008.gpio_irq"/>
       <configSetting altId="p008.gpio_mode.gpio_mode_irq" configurationId="p008.gpio_mode"/>
+      <configSetting altId="p009.irq13.irq13_dash_ds" configurationId="p009"/>
+      <configSetting altId="p009.gpio_irq.gpio_irq_enabled" configurationId="p009.gpio_irq"/>
+      <configSetting altId="p009.gpio_mode.gpio_mode_irq" configurationId="p009.gpio_mode"/>
       <configSetting altId="p011.adc1.an106" configurationId="p011"/>
       <configSetting altId="p011.gpio_mode.gpio_mode_an" configurationId="p011.gpio_mode"/>
       <configSetting altId="p014.adc0.an007" configurationId="p014"/>
