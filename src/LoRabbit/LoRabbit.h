@@ -197,3 +197,4 @@ typedef enum {
 
 #include "LoRabbit_hal.h"
 #include "LoRabbit_tp.h"
+#include "LoRabbit_util.h"
