@@ -25,8 +25,8 @@ extern const external_irq_instance_t g_external_irq0;
 extern icu_instance_ctrl_t g_external_irq0_ctrl;
 extern const external_irq_cfg_t g_external_irq0_cfg;
 
-#ifndef g_irq1_callback
-void g_irq1_callback(external_irq_callback_args_t *p_args);
+#ifndef g_irq0_callback
+void g_irq0_callback(external_irq_callback_args_t *p_args);
 #endif
 #define IOPORT_CFG_NAME g_bsp_pin_cfg
 #define IOPORT_CFG_OPEN R_IOPORT_Open
