@@ -7,8 +7,23 @@
 
 #define LOG(...) tm_printf((UB*)__VA_ARGS__)
 
-#define REQUEST_PACKET_MIN_SIZE 4
-#define REQUEST_FLAG_GET_DATA   0x01
+// 設定変更ボタン用のセマフォ
+static ID s_change_setting_sem_id;
+
+// システム起動時、ボタン用の callback が呼ばれる対策
+static bool s_is_started_lora_task = false;
+
+// テストするデータレートのリスト（代表的なものに絞る）
+static const LoraAirDateRate_t ADR_TEST_RATES[] = {
+    LORA_AIR_DATA_RATE_21875_BPS_SF_7_BW_500, // 高速・近距離向け
+    LORA_AIR_DATA_RATE_5469_BPS_SF_7_BW_125,  // 中速・中距離 （LoRaWANで一般的）
+    LORA_AIR_DATA_RATE_1758_BPS_SF_9_BW_125,  // デフォルト設定
+    LORA_AIR_DATA_RATE_2148_BPS_SF_11_BW_500, // 低速・長距離向け
+};
+#define NUM_ADR_TEST_RATES (sizeof(ADR_TEST_RATES) / sizeof(ADR_TEST_RATES[0]))
+
+#define DATA_BUFFER_SIZE 1024
+static uint8_t s_received_data_buffer[DATA_BUFFER_SIZE];
 
 // FSPで生成されたUARTインスタンス
 extern const uart_instance_t g_uart0;
@@ -26,8 +41,11 @@ void g_irq0_callback(external_irq_callback_args_t *p_args) {
     LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
 }
 
+// ボタン割り込みから呼び出される callback
 void g_irq1_callback(external_irq_callback_args_t *p_args) {
-    LOG("g_irq1_callback\n");
+    if (s_is_started_lora_task) {
+        tk_sig_sem(s_change_setting_sem_id, 1);
+    }
 }
 
 int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
@@ -73,91 +91,65 @@ LoraConfigItem_t s_config = {
     .encryption_key           = 0x0000,
 };
 
-LOCAL void task_1(INT stacd, void *exinf);  // task execution function
-LOCAL ID    tskid_1;            // Task ID number
-LOCAL T_CTSK ctsk_1 = {             // Task creation information
-    .itskpri    = 10,
-    .stksz      = 1024,
-    .task       = task_1,
-    .tskatr     = TA_HLNG | TA_RNG3,
-};
-
-LOCAL void task_2(INT stacd, void *exinf);  // task execution function
-LOCAL ID    tskid_2;            // Task ID number
-LOCAL T_CTSK ctsk_2 = {             // Task creation information
+LOCAL void lora_server_task(INT stacd, void *exinf);  // task execution function
+LOCAL ID    tskid_lora_server_task;    // Task ID number
+LOCAL T_CTSK ctsk_lora_server_task = { // Task creation information
     .itskpri    = 10,
     .stksz      = 2048,
-    .task       = task_2,
+    .task       = lora_server_task,
     .tskatr     = TA_HLNG | TA_RNG3,
 };
 
-LOCAL void task_1(INT stacd, void *exinf)
+LOCAL void lora_server_task(INT stacd, void *exinf)
 {
-    LoRabbit_TransferStatus_t status;
+    T_CSEM csem = { .exinf = 0, .sematr = TA_TFIFO, .isemcnt = 0, .maxsem = 1 };
+    s_change_setting_sem_id = tk_cre_sem(&csem);
 
-    while(1) {
-        tm_printf((UB*)"task 1\n");
-        if (LoRabbit_GetTransferStatus(&s_lora_handle, &status) == LORABBIT_OK) {
-            if (status.is_active) {
-                tm_printf((UB*)"LoRa Transferring: Packet %d / %d\n",
-                          status.current_packet_index + 1,
-                          status.total_packets);
-            } else {
-                tm_printf((UB*)"LoRa Idle.\n");
-            }
-        }
-        tk_dly_tsk(1000);
-    }
-}
+    int current_setting_index = -1;
 
-LOCAL void task_2(INT stacd, void *exinf)
-{
     // 通常モードに移行して受信開始
     tm_putstring((UB*)"Switching to Normal Mode.\n");
     LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
-    // 受信した要求パケットを格納するフレーム
-    RecvFrameE220900T22SJP_t request_frame;
+    LOG("ADR Test Server Task Started.\n");
+    LOG("Press Button on this board to cycle LoRa settings.\n");
 
-    // サーバーとして無限ループ
-    while(1) {
-        LOG("Waiting for a data request...\n");
+    // これ以降はボタン用 callback で signal できる
+    s_is_started_lora_task = true;
 
-       // クライアントからのデータ要求を待つ
-       int recv_len = LoRabbit_ReceiveFrame(&s_lora_handle, &request_frame, TMO_FEVR);
+    for (;;) {
+        // データ受信を試みる
+        // 5秒間の時限付きで、クライアントからの大容量データ送信を待つ
+        uint32_t received_len = 0;
+        ER err = LoRabbit_ReceiveData(&s_lora_handle,
+                                   s_received_data_buffer,
+                                   sizeof(s_received_data_buffer),
+                                   &received_len,
+                                   5000); // 5秒タイムアウト
+        if (err == LORABBIT_OK) {
+            LOG("Successfully received large data from client. Size: %lu bytes\n", received_len);
+        } else if (err != LORABBIT_ERROR_TIMEOUT) {
+            // タイムアウト以外のエラーは表示
+            LOG("Failed to receive large data. Error: %d\n", err);
+        }
 
-       // パケット長をチェック
-       if (recv_len < REQUEST_PACKET_MIN_SIZE) {
-           if (recv_len <= 0) {
-               LOG("ReceiveFrame error or timeout. Restarting wait.\n");
-           } else {
-               LOG("Received a packet, but too short. Ignoring.\n");
-           }
-           continue;
-       }
+        // 設定変更ボタンが押されたかチェックする ---
+        // TMO_POL を使うことで、セマフォを待たずに状態だけを確認（ノンブロッキング）
+        if (tk_wai_sem(s_change_setting_sem_id, 1, TMO_POL) == E_OK) {
+             current_setting_index = (current_setting_index + 1) % NUM_ADR_TEST_RATES;
 
-       // 要求パケットから送信元（クライアント）と要求内容を特定
-       uint16_t client_address = (uint16_t)(request_frame.recv_data[0] << 8) | request_frame.recv_data[1];
-       uint8_t  client_channel = request_frame.recv_data[2];
-       uint8_t  request_flag   = request_frame.recv_data[3];
+             LoraConfigItem_t new_config = s_lora_handle.current_config;
+             new_config.air_data_rate = ADR_TEST_RATES[current_setting_index];
 
-       // 要求フラグを検証
-       if (request_flag == REQUEST_FLAG_GET_DATA) {
-           LOG("Received data request from client 0x%04X on channel 0x%02X.\n", client_address, client_channel);
+             LOG("Setting Changed by Button\n");
+             // 自分自身のLoRa設定を変更
+             LoRabbit_InitModule(&s_lora_handle, &new_config);
+             LoRabbit_SwitchToNormalMode(&s_lora_handle);
 
-           ER err = E_OK;
-           if (err == LORABBIT_OK) {
-               LOG("Successfully sent large data to 0x%04X.\n", client_address);
-           } else {
-               LOG("Failed to send large data to 0x%04X. Error code: %d\n", client_address, err);
-           }
-
-           LoRabbit_DumpHistory(&s_lora_handle);
-       }
-       else
-       {
-           LOG("Received packet with unknown request flag (0x%02X). Ignoring.\n", request_flag);
-       }
+             int sf = get_spreading_factor_from_air_data_rate(new_config.air_data_rate);
+             int bw = get_bandwidth_khz_from_air_data_rate(new_config.air_data_rate);
+             LOG("====== Setting Changed: Server is now set to SF=%d, BW=%d.\n", sf, bw);
+        }
     }
 }
 
@@ -165,7 +157,7 @@ LOCAL void task_2(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
     LOG("Start User-main program.\n");
-    LOG("ra4m1_remote_camer_capture\n");
+    LOG("ra4m1_comm_log_collector\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {
@@ -189,11 +181,8 @@ EXPORT INT usermain(void)
     LOG("LoRa Init Success!\n");
 
     // Create & Start Tasks
-    tskid_1 = tk_cre_tsk(&ctsk_1);
-    tk_sta_tsk(tskid_1, 0);
-
-    tskid_2 = tk_cre_tsk(&ctsk_2);
-    tk_sta_tsk(tskid_2, 0);
+    tskid_lora_server_task = tk_cre_tsk(&ctsk_lora_server_task);
+    tk_sta_tsk(tskid_lora_server_task, 0);
 
     tk_slp_tsk(TMO_FEVR);
 
