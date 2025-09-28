@@ -34,23 +34,16 @@
  
 TsOUT* dnn_compute_lora_adr(TsIN*, TsInt*);
  
-TsInt8 sequential_1_1_dense_2_1_MatMul[8];
-TsInt8 sequential_1_1_dense_2_1_MatMul[8];
-TsInt8 sequential_1_1_dense_3_1_MatMul[4];
-TsInt8 sequential_1_1_dense_3_1_MatMul[4];
-TsInt8 StatefulPartitionedCall_1_0[4];
-TsInt8 StatefulPartitionedCall_1_0[4];
+extern TsInt8 dnn_buffer1[16];
+extern TsInt8 dnn_buffer2[8];
  
 struct shapes_lora_adr{
-    TsInt sequential_1_1_dense_2_1_MatMul_shape[4];
-    TsInt sequential_1_1_dense_3_1_MatMul_shape[4];
+    TsInt sequential_1_dense_1_MatMul_shape[4];
+    TsInt sequential_1_dense_1_2_MatMul_shape[4];
+    TsInt sequential_1_dense_2_1_MatMul_shape[4];
     TsInt StatefulPartitionedCall_1_0_shape;
 };
  
-struct shapes_lora_adr layer_shapes_lora_adr ={
-    {1,2,2,8},
-    {1,8,8,4},
-    4
-};
+extern struct shapes_lora_adr layer_shapes_lora_adr;
  
 #endif

@@ -5,14 +5,20 @@
 +------------------+--------------+-----------+-----------+-----------------------+
 |        1         | Input        |         - |         2 |                     - |
 |                  |              |           |           |                       |
-|        2         | Full Connect |        55 |         8 |                    16 |
+|        2         | Full Connect |       103 |        16 |                    32 |
 |                  |              |           |           |                       |
-|        3         | Full Connect |        55 |         4 |                    32 |
+|        3         | Full Connect |       167 |         8 |                   128 |
 |                  |              |           |           |                       |
-|        4         | Output       |         - |         4 |                     - |
+|        4         | Full Connect |        55 |         4 |                    32 |
+|                  |              |           |           |                       |
+|        5         | Output       |         - |         4 |                     - |
 |                  |              |           |           |                       |
 +------------------+--------------+-----------+-----------+-----------------------+
-|                  | TOTAL        |       110 |        18 |                    48 |
+|                  |              |           |        34 |                       |
+|                  | TOTAL        |       325 +-----------+                   192 |
+|                  |              |           |        30 |                       |
 +------------------+--------------+-----------+-----------+-----------------------+
 
 # MAC : Multiply and ACcumulation(Number of product-sum operations)
+# Total RAM size (Upper) : Total size of All layers.
+# Total RAM size (Lower) : Actual size (Input + dnn_buffer1 + dnn_buffer2 + Output).
