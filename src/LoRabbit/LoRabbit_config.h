@@ -13,3 +13,6 @@
 
 // デバッグモードの有効/無効
 // #define LORABBIT_DEBUG_MODE
+
+// AI モデル推論による ADR の有効/無効
+// #define LORABBIT_USE_AI_ADR
