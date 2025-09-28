@@ -6,6 +6,8 @@
 #include "LoRabbit_hal.h"
 #include "LoRabbit_util.h"
 
+#include <stdbool.h>
+
 // e-AIトランスレータが生成したヘッダ
 #include "Typedef.h"
 #include "layer_shapes_lora_adr.h"
@@ -48,7 +50,7 @@ const TsInt8 StatefulPartitionedCall_1_0_offset[] = {30,-128};
 /**
  * @brief AIモデルで最適なパラメータ（データレートと送信電力）を予測する（内部関数）
  */
-static ER predict_best_parameters(int8_t last_ack_rssi,
+static int predict_best_parameters(int8_t last_ack_rssi,
                                   bool last_ack_success,
                                   LoRaRecommendedConfig_t *p_recommendation)
 {
