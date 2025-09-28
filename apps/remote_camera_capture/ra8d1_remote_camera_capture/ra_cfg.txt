@@ -1012,7 +1012,7 @@ FSP Configuration
       Name: g_external_irq12
       Channel: 12
       Trigger: Falling
-      Digital Filtering: Disabled
+      Digital Filtering: Enabled
       Filter Source: PCLK filter
       Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
       Callback: button_irq_callback

@@ -47,7 +47,18 @@ void g_irq1_callback(external_irq_callback_args_t *p_args) {
 }
 
 void button_irq_callback(external_irq_callback_args_t *p_args) {
-    tk_sig_sem(s_button_s2_press_sem_id, 1);
+    T_RSEM rsem; // セマフォの状態を格納する構造体
+    ER err;
+
+    // セマフォの状態を参照
+    err = tk_ref_sem(s_button_s2_press_sem_id, &rsem);
+
+    if (err >= E_OK) {
+        // セマフォのカウントが 0 の場合のみシグナルする
+        if (rsem.semcnt == 0) {
+            tk_sig_sem(s_button_s2_press_sem_id, 1);
+        }
+    }
 }
 
 int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
