@@ -162,7 +162,7 @@ LOCAL void lora_server_task(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
     LOG("Start User-main program.\n");
-    LOG("ra4m1_comm_log_collector\n");
+    LOG("ra4m1_ai_adr\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {

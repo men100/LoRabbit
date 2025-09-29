@@ -257,6 +257,7 @@ LOCAL void task_2(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
 	tm_putstring((UB*)"Start User-main program.\n");
+    tm_putstring((UB*)"ra8d1_remote_camera_capture\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {

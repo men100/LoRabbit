@@ -176,7 +176,7 @@ LOCAL void task_2(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
     LOG("Start User-main program.\n");
-    LOG("ra4m1_remote_camer_capture\n");
+    LOG("ra4m1_remote_camera_capture\n");
 
     // カメラの初期化 (失敗したらここで停止)
     camera_init();

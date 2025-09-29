@@ -141,13 +141,12 @@ LOCAL void task_2(INT stacd, void *exinf)
 EXPORT INT usermain(void)
 {
 	tm_putstring((UB*)"Start User-main program.\n");
+    tm_putstring((UB*)"ra8d1_recv_compressed_data\n");
 
 	/* Turn off the LED on the board. */
 	out_h(PORT_PODR(6), in_h(PORT_PODR(6))&~(1<<0));    // BLUE
 	out_h(PORT_PODR(4), in_h(PORT_PODR(4))&~(1<<14));   // GREEN
 	out_h(PORT_PODR(1), in_h(PORT_PODR(1))&~(1<<7));    // RED
-
-	tm_putstring((UB*)"LoRa recv test\n");
 
     // ハードウェア構成を定義
     LoraHwConfig_t lora_hw_config = {

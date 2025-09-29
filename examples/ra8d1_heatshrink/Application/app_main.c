@@ -126,8 +126,7 @@ int heatshrink_encode_and_decode(void) {
 EXPORT INT usermain(void)
 {
     tm_putstring((UB*)"Start User-main program.\n");
-
-    tm_putstring((UB*)"heatshrink encode and decode test\n");
+    tm_putstring((UB*)"ra8d1_heatshrink\n");
 
     heatshrink_encode_and_decode();
 
