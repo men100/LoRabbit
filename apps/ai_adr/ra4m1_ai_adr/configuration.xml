@@ -225,7 +225,7 @@
     <module id="module.driver.external_irq_on_icu.1728953923">
       <property id="module.driver.external_irq.name" value="g_external_irq0"/>
       <property id="module.driver.external_irq.channel" value="0"/>
-      <property id="module.driver.external_irq.trigger" value="module.driver.external_irq.trigger.trig_falling"/>
+      <property id="module.driver.external_irq.trigger" value="module.driver.external_irq.trigger.trig_both_edge"/>
       <property id="module.driver.external_irq.filter_enable" value="module.driver.external_irq.filter_enable.false"/>
       <property id="module.driver.external_irq.filter_source" value="module.driver.external_irq.filter_source.pclk"/>
       <property id="module.driver.external_irq.clock_source_div" value="module.driver.external_irq.clock_source_div.clock_source_div_by_64"/>

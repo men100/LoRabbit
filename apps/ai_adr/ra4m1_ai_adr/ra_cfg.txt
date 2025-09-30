@@ -256,7 +256,7 @@ FSP Configuration
     Instance "g_external_irq0 External IRQ (r_icu)"
       Name: g_external_irq0
       Channel: 0
-      Trigger: Falling
+      Trigger: Both Edges
       Digital Filtering: Disabled
       Filter Source: PCLK filter
       Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64

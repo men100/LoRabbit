@@ -34,7 +34,7 @@ const icu_extended_cfg_t g_external_irq0_ext_cfg =
 { .filter_src = EXTERNAL_IRQ_DIGITAL_FILTER_PCLK_DIV, };
 
 const external_irq_cfg_t g_external_irq0_cfg =
-{ .channel = 0, .trigger = EXTERNAL_IRQ_TRIG_FALLING, .filter_enable = false, .clock_source_div =
+{ .channel = 0, .trigger = EXTERNAL_IRQ_TRIG_BOTH_EDGE, .filter_enable = false, .clock_source_div =
           EXTERNAL_IRQ_CLOCK_SOURCE_DIV_64,
   .p_callback = g_irq0_callback,
   /** If NULL then do not add & */
