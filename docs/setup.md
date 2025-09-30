@@ -99,6 +99,34 @@ RMC-RA4M1 側プロジェクトで必要です。
 | GND          | GND   |
 | +3.3V        | VCC   |
 
+# LoRabbit ライブラリ設定
+
+LoRabbit_config.h の define を設定することで LoRabbit ライブラリの挙動を変更することができます。
+
+## LORABBIT_HISTORY_SIZE
+
+通信履歴を保存するリングバッファのサイズを指定します。初期値は 32 です。
+
+## LORABBIT_TP_RETRY_COUNT
+
+Transport 層の API (LoRabbit_SendData や LoRabbit_ReceiveData など) において、通信失敗時のリトライ回数を指定します。初期値は 3 です。
+
+## LORABBIT_TP_ACK_TIMEOUT_MS
+
+Transport 層の API (LoRabbit_SendData や LoRabbit_ReceiveData など) において、ACK を受け取る際のタイムアウト時間を指定します。初期値は 2000 (ms) = 2秒 です。
+
+## LORABBIT_USE_AUX_IRQ
+
+LoRa モジュールの補助信号 (AUX) ピンを使った処理を有効化するかどうかを指定します。初期値は無効化 (使わない) ですが、これは LoRabbit ライブラリ導入時の動作確認を用意にすることを意図したもので、設定することを強く推奨します。有効化することで割り込みと μT-Kernel の同期機構を使って送受信処理を最適化しています。こちらを無効化すると、送信時は仕様から算出された待ち時間を必ず待ち、受信時はタイムアウト指定することができません。
+
+## LORABBIT_DEBUG_MODE
+
+LoRabbit ライブラリのデバッグ出力を有効化するかどうかを指定します。初期値は無効化 (出力しない) です。
+
+## LORABBIT_USE_AI_ADR
+
+AI による推論 API (LoRabbit_Get_AI_Recommendation) を使うかどうかを指定します。初期値は無効化 (使用しない) です。
+
 # FSP (Flexible Software Package) 設定
 
 プロジェクトにおける FSP 設定について説明します。
@@ -175,6 +203,105 @@ Bitrate は更に高速でも動作する可能性がありますが、MCU と�
 |設定項目 | 値 |
 |---|---|
 | Mode     | Output mode (Initial High) |
+
+## プッシュボタン用 ICU
+
+|設定項目      | 値 |
+|---|---|
+| Trigger                        | Falling or Rising |
+| Digital Filtering              | Enabled           |
+| Digital Filtering Sample Clock | PCLK / 64         |
+| Callback                       | 必ず指定すること   |
+
+ボタンの特性によって Trigger の値は変更して下さい。例えば EK-RA8D1 のボード上の S1, S2 ボタンは Falling、RMC-RA4M1 に取り付けたボタンは Rising でした。
+
+起動時、設定した IRQ インスタンスをオープンした上で、割り込みを有効化してください。
+
+```
+p_irq1->p_api->open(p_irq1->p_ctrl, p_irq1->p_cfg);
+p_irq1->p_api->enable(p_irq1->p_ctrl);
+```
+
+割り込みの Callback は指定した上で、下記のように LoRabbit ライブラリのハンドラ関数を呼び出して下さい。
+
+```
+void g_irq_callback(external_irq_callback_args_t *p_args) {
+    // ライブラリ提供のハンドラを呼び出し、処理を委譲する
+    LoRabbit_AuxCallbackHandler(&s_lora_handle, p_args);
+}
+```
+
+# LoRabbit ライブラリの使い方
+
+## 初期化
+
+```c
+// main.c
+
+// LoRaハンドルの実体
+static LoraHandle_t s_lora_handle;
+
+// ハードウェア構成を定義
+LoraHwConfig_t lora_hw_config = {
+    .p_uart = &g_uart_instance,
+    .m0     = BSP_IO_PORT_XX_PIN_YY,
+    .m1     = BSP_IO_PORT_XX_PIN_YY,
+    .aux    = BSP_IO_PORT_XX_PIN_YY,
+    .pf_baud_set_helper = my_baud_set_wrapper_function,
+};
+
+// LoRaライブラリを初期化
+LoRabbit_Init(&s_lora_handle, &lora_hw_config);
+
+// LoRaモジュールを初期化
+LoRabbit_InitModule(&s_lora_handle, &initial_lora_config);
+```
+
+## パケットの送受信
+
+```
+// Send
+int err = LoRabbit_SendFrame(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, send_buffer, len);
+
+// Receive
+RecvFrameE220900T22SJP_t recv_frame;
+int err = LoRabbit_ReceiveFrame(&s_lora_handle, &recv_frame, TMO_FEVR)
+```
+
+## 大容量データの送受信
+
+```
+// Client Task
+int err = LoRabbit_SendData(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, my_data, sizeof(my_data), true);
+
+// Server Task
+uint32_t received_len = 0;
+int err = LoRabbit_ReceiveData(&s_lora_handle, rx_buffer, sizeof(rx_buffer), &received_len, TMO_FEVR);
+```
+
+## 大容量データの送受信 (圧縮・伸長付き)
+
+```
+// Client Task
+int err = LoRabbit_SendCompressedData(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, my_data, sizeof(my_data), true);
+
+// Server Task
+uint32_t received_len = 0;
+int err = LoRabbit_ReceiveCompressedData(&s_lora_handle, rx_buffer, sizeof(rx_buffer), &received_len, TMO_FEVR);
+```
+
+## AI-ADR 機能の活用
+
+```
+// Client Task (after a communication)
+
+LoRaRecommendedConfig_t recommend;
+int err = LoRabbit_GetAIRecommendation(&s_lora_handle, &recommend);
+
+if (err == LORABBIT_OK) {
+    // サーバーに推奨設定を送信し、ネゴシエーション...
+}
+```
 
 [lora-ev-link]: https://dragon-torch.tech/rf-modules/lora/
 [MEGA-SPI-Camera-link]: https://docs.arducam.com/Arduino-SPI-camera/MEGA-SPI/MEGA-SPI-Camera/
