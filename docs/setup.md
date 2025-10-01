@@ -304,7 +304,7 @@ LoRabbit_InitModule(&s_lora_handle, &initial_lora_config);
 
 ## パケットの送受信
 
-```
+```c
 // Send
 int err = LoRabbit_SendFrame(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, send_buffer, len);
 
@@ -315,7 +315,7 @@ int err = LoRabbit_ReceiveFrame(&s_lora_handle, &recv_frame, TMO_FEVR)
 
 ## 大容量データの送受信
 
-```
+```c
 // Client Task
 int err = LoRabbit_SendData(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, my_data, sizeof(my_data), true);
 
@@ -326,7 +326,7 @@ int err = LoRabbit_ReceiveData(&s_lora_handle, rx_buffer, sizeof(rx_buffer), &re
 
 ## 大容量データの送受信 (圧縮・伸長付き)
 
-```
+```c
 // Client Task
 int err = LoRabbit_SendCompressedData(&s_lora_handle, SERVER_ADDR, SERVER_CHAN, my_data, sizeof(my_data), true);
 
@@ -337,7 +337,7 @@ int err = LoRabbit_ReceiveCompressedData(&s_lora_handle, rx_buffer, sizeof(rx_bu
 
 ## AI-ADR 機能の活用
 
-```
+```c
 // Client Task (after a communication)
 
 LoRaRecommendedConfig_t recommend;
@@ -356,7 +356,7 @@ LoRa モジュールにおける UART 通信の baudrate は変更すること�
 
 1. FSP に baudrate を変更する API (baudSet) は存在するが、設定値を作成する API が存在しない
 
-```
+```c
 これはある
 p_uart->p_api->baudSet(...)
 
@@ -368,7 +368,7 @@ p_uart->p_api->baudCalculate(...)
 - EK-RA8D1 なら sci_b_uart
 - RMC-RA4M1 なら sci_uart
 
-```
+```c
 sci_b_uart の Baudrate 設定値作成関数は
 R_SCI_B_UART_BaudCalculate
 
@@ -382,7 +382,7 @@ R_SCI_UART_BaudCalculate
 
 ## sci_b_uart 用 baudrate 設定ヘルパー関数の記述例
 
-```
+```c
 int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
     fsp_err_t err = FSP_SUCCESS;
     uart_instance_t const *p_uart = p_handle->hw_config.p_uart;
@@ -412,7 +412,7 @@ int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
 ```
 ## sci_uart 用 baudrate 設定ヘルパー関数の記述例
 
-```
+```c
 int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
     fsp_err_t err = FSP_SUCCESS;
     uart_instance_t const *p_uart = p_handle->hw_config.p_uart;

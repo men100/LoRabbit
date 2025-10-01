@@ -53,7 +53,7 @@ LoRabbit(ローラビット)は、Renesas RAシリーズマイコンとμT-Kerne
 - UART から下記のようなデバッグ用シリアル出力が出ていれば OK です
   - デバッグ用シリアル出力は Arduino コネクタの J23-2 ピン (TXD) から出力されています
 
-```
+```c
 microT-Kernel Version 3.00
 
 Start User-main program.
@@ -108,7 +108,7 @@ task 1
 - UART から下記のようなデバッグ用シリアル出力が出ていれば OK です
   - デバッグ用シリアル出力は P302 ピン (TxD1) から出力されています
 
-```
+```c
 microT-Kernel Version 3.00
 
 Start User-main program.
