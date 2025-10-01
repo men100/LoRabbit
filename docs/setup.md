@@ -2,6 +2,47 @@
 
 ここでは LoRabbit ライブラリや各種サンプルプログラム、サンプルアプリケーションを動作させるための技術情報を記述しています。
 
+# LoRabbit ライブラリを導入した開発の流れ
+
+Renesas 製 IDE である e2_studio の使用を想定しています。
+
+## 新規プロジェクトを作成する
+
+## 各種ソースコードをプロジェクトに追加する
+
+- [LoRabbit ライブラリ][lorabbit-link]
+- [μT-Kernel 3.0 BSP2][mtk3_bsp2-link]
+- [heatshrink ライブラリ][heatshrink-link]
+- (optional) [lora_adr][lora_adr-link]
+  - LoRabbit ライブラリの設定で LORABBIT_USE_AI_ADR を有効化する場合。詳しくは [LoRabbit ライブラリ設定](#lorabbit-ライブラリ設定) をご参照下さい
+
+## 外部ハードウェアとの接続を行う
+
+- 詳しくは [外部ハードウェアとの接続](#外部ハードウェアとの接続) をご参照下さい
+
+## LoRabbit ライブラリ設定を行う
+
+- 詳しくは [LoRabbit ライブラリ設定](#lorabbit-ライブラリ設定) をご参照下さい。
+  - LoRabbit_config.h を編集するか、e2_studio で GNU Arm Cross C Compiler の Preprocessor に指定するのでも OK です
+
+## FSP (Flexible Software Package) の設定を行う
+
+- 詳しくは [FSP (Flexible Software Package) の設定](#fsp-flexible-software-package-設定) をご参照下さい
+
+## LoRabbit ライブラリを使ってコーディングをする
+
+- 詳しくは [LoRabbit ライブラリの使い方](#lorabbit-ライブラリの使い方) をご参照下さい
+
+## 実行 or デバッグを行う
+
+- 使用しているボードの仕様に沿って実行 or デバッグを実施します
+- e2_studio では実行・デバッグが可能です
+- Renesas Flash Programmer を使って実行ファイルを書き込むことで実行させることも可能です
+
+## ログを確認する
+
+- 
+
 # 外部ハードウェアとの接続
 
 EK-RA8D1、RMC-RA4M1 における外部ハードウェアとの接続について説明します。他のボードを利用して動作させたい場合、こちらの説明を参照しつつボードの仕様に合わせて接続するようにしてください。
@@ -98,6 +139,10 @@ RMC-RA4M1 側プロジェクトで必要です。
 | P104: IRQ01  | Input |
 | GND          | GND   |
 | +3.3V        | VCC   |
+
+## デバッグ用シリアル出力 UART
+
+こちらについては [μT-Kernel 3.0 BSP2 ユーザーズマニュアル](https://github.com/tron-forum/mtk3_bsp2/blob/main/doc/bsp2_ra_fsp_jp.md#22-%E3%83%87%E3%83%90%E3%83%83%E3%82%B0%E7%94%A8%E3%82%B7%E3%83%AA%E3%82%A2%E3%83%AB%E5%87%BA%E5%8A%9B) の「2.2. デバッグ用シリアル出力」をご参照下さい。
 
 # LoRabbit ライブラリ設定
 
@@ -303,6 +348,104 @@ if (err == LORABBIT_OK) {
 }
 ```
 
+# baudrate 設定ヘルパー関数について
+
+LoRa モジュールにおける UART 通信の baudrate は変更することができ、LoRabbit ライブラリも対応しています。当然ながら、LoRa モジュールの設定を変更した場合、MCU 側の baudrate も変更する必要があります。
+
+この baudrate 変更についてはユーザの方でヘルパー関数を指定する仕様にしました。それは以下の2つの理由からです。
+
+1. FSP に baudrate を変更する API (baudSet) は存在するが、設定値を作成する API が存在しない
+
+```
+これはある
+p_uart->p_api->baudSet(...)
+
+ない
+p_uart->p_api->baudCalculate(...)
+```
+
+2. ボードによって、UART デバイスが異なる
+- EK-RA8D1 なら sci_b_uart
+- RMC-RA4M1 なら sci_uart
+
+```
+sci_b_uart の Baudrate 設定値作成関数は
+R_SCI_B_UART_BaudCalculate
+
+sci_uart の Baudrate 設定値作成関数は
+R_SCI_UART_BaudCalculate
+```
+
+これらの理由により、デバイス固有の関数をライブラリ内で記述することとなるため、結果としてユーザ側マクロでデバイス指定する必要がありました。そのためライブラリの柔軟性を維持するため、今回はヘルパー関数を導入しています。
+
+一応各種サンプルプログラムにはヘルパー関数例を記述していますので、参考にして下さい。
+
+## sci_b_uart 用 baudrate 設定ヘルパー関数の記述例
+
+```
+int my_sci_b_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
+    fsp_err_t err = FSP_SUCCESS;
+    uart_instance_t const *p_uart = p_handle->hw_config.p_uart;
+
+    // ドライバ固有のBaudCalculate関数を呼び出す
+    sci_b_baud_setting_t baud_setting;
+    memset(&baud_setting, 0x0, sizeof(sci_b_baud_setting_t));
+    err = R_SCI_B_UART_BaudCalculate(baudrate,
+                                     false, // Bitrate Modulation 無効
+                                     5000,  // 許容エラー率 (5%)
+                                     &baud_setting);
+    if (FSP_SUCCESS != err) {
+        LOG("R_SCI_B_UART_BaudCalculate failed\n");
+        // 計算失敗
+        return -1;
+    }
+
+    // mddr (上位8bit) が 0x80 になっているが、Bitrate Modulation (brme) が 0 になっているので無視される
+    LOG("baudrate=%dbps, baud_setting.baudrate_bits: 0x%08x\n",
+            baudrate, baud_setting.baudrate_bits);
+
+    // 計算結果を void* にキャストして、抽象APIである baudSet に渡す
+    err = p_uart->p_api->baudSet(p_uart->p_ctrl, (void*)&baud_setting);
+
+    return (FSP_SUCCESS == err) ? 0 : -1;
+}
+```
+## sci_uart 用 baudrate 設定ヘルパー関数の記述例
+
+```
+int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
+    fsp_err_t err = FSP_SUCCESS;
+    uart_instance_t const *p_uart = p_handle->hw_config.p_uart;
+
+    // ドライバ固有のBaudCalculate関数を呼び出す
+    baud_setting_t baud_setting;
+    memset(&baud_setting, 0x0, sizeof(baud_setting_t));
+
+    err = R_SCI_UART_BaudCalculate(baudrate,
+                                   false, // Bitrate Modulation 無効
+                                   5000,  // 許容エラー率 (5%)
+                                   &baud_setting);
+    if (FSP_SUCCESS != err) {
+        tm_printf((UB*)"R_SCI_UART_BaudCalculate failed\n");
+        // 計算失敗
+        return -1;
+    }
+
+    // mddr が 0x80 になっているが、Bitrate Modulation (brme) が 0 になっているので無視される
+    tm_printf((UB*)"baudrate=%dbps, baud_setting.(semr_baudrate_bits, cks, brr, mddr)=(0x%02x, %d, 0x%02x, 0x%02x)\n",
+            baudrate, baud_setting.semr_baudrate_bits, baud_setting.cks, baud_setting.brr, baud_setting.mddr);
+
+    // 計算結果を void* にキャストして、抽象APIである baudSet に渡す
+    err = p_uart->p_api->baudSet(p_uart->p_ctrl, (void*)&baud_setting);
+
+    return (FSP_SUCCESS == err) ? 0 : -1;
+}
+```
+
+[lorabbit-link]: https://github.com/men100/LoRabbit/tree/main/src/LoRabbit
+[mtk3_bsp2-link]: https://github.com/tron-forum/mtk3_bsp2/
+[heatshrink-link]: https://github.com/men100/heatshrink/tree
+[lora_adr-link]: https://github.com/men100/LoRabbit/tree/main/src/lora_adr
 [lora-ev-link]: https://dragon-torch.tech/rf-modules/lora/
 [MEGA-SPI-Camera-link]: https://docs.arducam.com/Arduino-SPI-camera/MEGA-SPI/MEGA-SPI-Camera/
 [Mega-5MP-SPI-Camera-link]: https://www.arducam.com/presale-mega-5mp-color-rolling-shutter-camera-module-with-autofocus-lens-for-any-microcontroller.html

@@ -19,8 +19,9 @@ LoRabbit(ローラビット)は、Renesas RAシリーズマイコンとμT-Kerne
 ## 対象環境
 
 - MCU
-  - Renesas RA シリーズ
+  - Renesas RA シリーズで μT-Kernel 3.0 がサポートしているもの
   - 作者の手元では RA8D1 (EK-RA8D1) と RA4M1 (RMC-RA4M1) で動作確認を行っています
+    - RMC-RA4M1 は Arduino UNO R4 MINIMA と互換性があるため、μT-Kernel 3.0 のサポートデバイスとなっています
 - IDE
   - Renesas 製 e2_studio
   - 作者の手元では Version 2025-04 (25.4.0) で動作確認を行っています
@@ -49,8 +50,8 @@ LoRabbit(ローラビット)は、Renesas RAシリーズマイコンとμT-Kerne
     - マイクロコントローラ: R7FA8D1BHECBD
     - ツール: J-Link
     - インターフェース: SWD
-- シリアルログから下記のようなログが出ていれば OK です
-  - シリアルログは Arduino コネクタの J23-2 ピン (TXD) から出力されています
+- UART から下記のようなデバッグ用シリアル出力が出ていれば OK です
+  - デバッグ用シリアル出力は Arduino コネクタの J23-2 ピン (TXD) から出力されています
 
 ```
 microT-Kernel Version 3.00
@@ -104,8 +105,8 @@ task 1
     - マイクロコントローラ: RA
     - ツール: COM port
       - ポート番号は適宜選択
-- シリアルログから下記のようなログが出ていれば OK です
-  - シリアルログは P302 ピン (TxD1) から出力されています
+- UART から下記のようなデバッグ用シリアル出力が出ていれば OK です
+  - デバッグ用シリアル出力は P302 ピン (TxD1) から出力されています
 
 ```
 microT-Kernel Version 3.00
@@ -158,9 +159,6 @@ task 1
 
 - このライブラリのライセンスは Apache Lisence 2.0 です。
 
-[lorabbit-link]: https://github.com/men100/LoRabbit/tree/main/src/LoRabbit
-[mtk3_bsp2-link]: https://github.com/tron-forum/mtk3_bsp2/
-[heatshrink-link]: https://github.com/men100/heatshrink/tree
 [example-ra8d1_send-link]: https://github.com/men100/LoRabbit/tree/main/examples/ra8d1_send
 [example-ra4m1_send-link]: https://github.com/men100/LoRabbit/tree/main/examples/ra4m1_send
 [lora-ev-link]: https://dragon-torch.tech/rf-modules/lora/e220-900t22s-jp-ev1/
