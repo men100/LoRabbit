@@ -1,3 +1,8 @@
+/**
+ * @file LoRabbit_util.c
+ * @brief LoRabbitライブラリのユーティリティ関数の実装
+ * @details LoRabbit_util.hで宣言されたヘルパー関数を実装します。
+ */
 #include "LoRabbit_util.h"
 
 // air_data_rate から Spreading Factor を返す

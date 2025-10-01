@@ -1,3 +1,8 @@
+/**
+ * @file LoRabbit_ai_adr.c
+ * @brief AI-based Adaptive Data Rate (AI-ADR) の実装
+ * @details LoRabbit_ai_adr.hで宣言された、e-AIを用いた最適パラメータ予測機能を実装します。
+ */
 #include "LoRabbit_ai_adr.h"
 
 #ifdef LORABBIT_USE_AI_ADR

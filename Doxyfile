@@ -1,0 +1,27 @@
+# プロジェクト名
+PROJECT_NAME           = "LoRabbit"
+
+# HTMLを生成する
+GENERATE_HTML          = YES
+
+# HTMLの出力先フォルダ
+OUTPUT_DIRECTORY       = ./doxygen-output
+
+# サブディレクトリは再帰的に検索しない (存在しないから)
+RECURSIVE              = NO
+
+# ソースコードがあるディレクトリ
+INPUT                  = ./src/LoRabbit
+
+# 解析するファイルのパターンを指定
+FILE_PATTERNS          = *.c *.h
+
+# 出力言語
+OUTPUT_LANGUAGE        = Japanese
+
+# C言語に特化した出力をする
+OPTIMIZE_OUTPUT_FOR_C  = YES
+
+# Doxygenのプリプロセッサに対して、ここで定義したマクロを有効にする
+# これにより、#ifdefで無効化されているコードもドキュメント化の対象になる
+PREDEFINED             = LORABBIT_USE_AI_ADR LORABBIT_USE_AUX_IRQ

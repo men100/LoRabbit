@@ -58,3 +58,4 @@
 .settings/
 makefile
 compile_commands.json
+doxygen-output/

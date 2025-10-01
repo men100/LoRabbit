@@ -1,3 +1,9 @@
+/**
+ * @file LoRabbit_tp.c
+ * @brief LoRabbit Transport Protocol の実装
+ * @details LoRabbit_tp.hで宣言された、大容量データの分割送受信や
+ * 圧縮・伸長、通信履歴管理などの高レベルAPIを実装します。
+ */
 #include "LoRabbit.h"
 #include "LoRabbit_tp.h"
 #include "LoRabbit_config.h"

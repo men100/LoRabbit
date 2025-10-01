@@ -1,0 +1,55 @@
+# ワークフローの名前
+name: Build and Deploy Doxygen Docs
+
+# 実行するタイミング
+on:
+  # mainブランチにプッシュされた時に実行
+  push:
+    branches:
+      - main
+  # 手動でも実行できるようにする
+  workflow_dispatch:
+
+# ワークフローが必要とする権限
+permissions:
+  contents: read
+  pages: write      # GitHub Pagesへのデプロイに必要
+  id-token: write   # GitHub Pagesへのデプロイに必要
+
+jobs:
+  # ドキュメントをビルドしてアップロードするジョブ
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. DoxygenとGraphvizをインストール (Graphvizはグラフ生成に必要)
+      - name: Install Doxygen and Graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      # 3. Doxygenを実行してドキュメントを生成
+      - name: Build Doxygen documentation
+        run: doxygen Doxyfile
+
+      # 4. 生成されたHTMLをアーティファクトとしてアップロード
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Doxyfileで指定した出力フォルダをアップロード
+          path: ./doxygen-output/html
+
+  # アップロードされたドキュメントをデプロイするジョブ
+  deploy:
+    # buildジョブが完了するまで待つ
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }} # デプロイ先のURLを出力
+    steps:
+      # 5. アーティファクトをGitHub Pagesにデプロイ
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

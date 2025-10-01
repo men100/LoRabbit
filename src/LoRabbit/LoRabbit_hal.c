@@ -1,3 +1,9 @@
+/**
+ * @file LoRabbit_hal.c
+ * @brief LoRabbit Hardware Abstraction Layer (HAL) の実装
+ * @details LoRabbit_hal.hで宣言された、LoRaモジュールを直接操作する
+ * 基本的なAPI（初期化、送受信、モード切替など）を実装します。
+ */
 #include "LoRabbit.h"
 #include "LoRabbit_hal.h"
 #include "LoRabbit_config.h"
