@@ -151,6 +151,7 @@ task 1
 # Document
 
 - [詳細セットアップガイド][setup-link]: LoRabbitを使うにあたってのFSP の詳細設定やライブラリの設定について解説しています
+- [LoRabbit API 詳解][api-link]: LoRabbit API の詳細について解説しています
 - [サンプルプログラムについて][examples-link]: 各種サンプルプログラムについて解説しています
 - [サンプルアプリケーションについて][apps-link]: 各種サンプルアプリケーションについて解説しています
 - [利用している OSS について][oss-link]: 本リポジトリで利用している OSS についての詳細情報を記述しています
@@ -163,6 +164,7 @@ task 1
 [example-ra4m1_send-link]: https://github.com/men100/LoRabbit/tree/main/examples/ra4m1_send
 [lora-ev-link]: https://dragon-torch.tech/rf-modules/lora/e220-900t22s-jp-ev1/
 [setup-link]: docs/setup.md
+[api-link]: https://men100.github.io/LoRabbit
 [examples-link]: docs/examples.md
 [apps-link]: docs/apps.md
 [oss-link]: docs/oss.md

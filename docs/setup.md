@@ -348,6 +348,8 @@ if (err == LORABBIT_OK) {
 }
 ```
 
+API の詳細な解説については [LoRabbit API 詳解][api-link] をご参照下さい。
+
 # baudrate 設定ヘルパー関数について
 
 LoRa モジュールにおける UART 通信の baudrate は変更することができ、LoRabbit ライブラリも対応しています。当然ながら、LoRa モジュールの設定を変更した場合、MCU 側の baudrate も変更する必要があります。
@@ -442,6 +444,7 @@ int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
 }
 ```
 
+[api-link]: https://men100.github.io/LoRabbit
 [lorabbit-link]: https://github.com/men100/LoRabbit/tree/main/src/LoRabbit
 [mtk3_bsp2-link]: https://github.com/tron-forum/mtk3_bsp2/
 [heatshrink-link]: https://github.com/men100/heatshrink/tree
