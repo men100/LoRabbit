@@ -32,11 +32,11 @@
 /**
  * @brief LoRaフレームを送信するが、完了を待たない (Fire and Forget)
  * @details ACKパケットの送信など、応答を待つ必要がない場合に使用される内部関数。
- * @param p_handle 操作対象のハンドル
- * @param target_address 送信先アドレス
- * @param target_channel 送信先チャンネル
- * @param p_send_data 送信データ
- * @param size 送信データサイズ
+ * @param[in] p_handle 操作対象のハンドル
+ * @param[in] target_address 送信先アドレス
+ * @param[in] target_channel 送信先チャンネル
+ * @param[in] p_send_data 送信データ
+ * @param[in] size 送信データサイズ
  * @retval LORABBIT_OK 成功
  */
 ER lora_send_frame_fire_and_forget_internal(LoraHandle_t *p_handle,
