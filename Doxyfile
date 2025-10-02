@@ -25,3 +25,6 @@ OPTIMIZE_OUTPUT_FOR_C  = YES
 # Doxygenのプリプロセッサに対して、ここで定義したマクロを有効にする
 # これにより、#ifdefで無効化されているコードもドキュメント化の対象になる
 PREDEFINED             = LORABBIT_USE_AI_ADR LORABBIT_USE_AUX_IRQ
+
+# 内部関数も出力する
+INTERNAL_DOCS          = YES
