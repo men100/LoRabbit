@@ -16,6 +16,31 @@ Renesas 製 IDE である e2_studio の使用を想定しています。
 - (optional) [lora_adr][lora_adr-link]
   - LoRabbit ライブラリの設定で LORABBIT_USE_AI_ADR を有効化する場合。詳しくは [LoRabbit ライブラリ設定](#lorabbit-ライブラリ設定) をご参照下さい
 
+## 各種ヘッダファイルのパスをプロジェクトに設定する
+
+### GNU Arm Cross Assembler の includes
+
+- μT-Kernel 3.0 BSP2 および μT-Kernel 3.0
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/config}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/include}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/mtkernel/kernel/knlinc}"`
+
+### GNU Arm Cross C Compiler の includes
+
+- μT-Kernel 3.0 BSP2 および μT-Kernel 3.0
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/config}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/include}"`
+  - `"${workspace_loc:/${ProjName}/mtk3_bsp2/mtkernel/kernel/knlinc}"`
+- LoRabbit ライブラリ
+  - `"${workspace_loc:/${ProjName}/LoRabbit}"`
+- heatshrink ライブラリ
+  - `"${workspace_loc:/${ProjName}/heatshrink}"`
+- (optional) lora_adr
+  - `"${workspace_loc:/${ProjName}/lora_adr}"`
+  - LoRabbit ライブラリの設定で LORABBIT_USE_AI_ADR を有効化する場合。詳しくは [LoRabbit ライブラリ設定](#lorabbit-ライブラリ設定) をご参照下さい
+
 ## 外部ハードウェアとの接続を行う
 
 - 詳しくは [外部ハードウェアとの接続](#外部ハードウェアとの接続) をご参照下さい
@@ -443,6 +468,29 @@ int my_sci_uart_baud_set_helper(LoraHandle_t *p_handle, uint32_t baudrate) {
     return (FSP_SUCCESS == err) ? 0 : -1;
 }
 ```
+
+# よくある問題と回避策
+
+## LoRabbit ライブラリをビルドできない
+
+ヘッダファイルに対して "No such file" のエラーが出た場合、include パスの設定が正しくない可能性があります。プロジェクトのプロパティ -> C/C++ ビルド -> 設定 -> GNU Arm Cross C Compiler -> includes を確認してください。
+
+![includes](../assets/build_includes.png)
+
+また、"undefined reference" エラーが出た場合、プロジェクトに正しくソースコードが含まれていないことがほとんどです。
+
+特に e2_studio では外部からソースコードの取り込みを行った場合、ビルドから除外されていることがありますので、ビルド対象になっているかを確認して下さい。
+下記のようにビルド対象にしたいディレクトリのプロパティで「ビルドからリソースを除外」にチェックが入っていなければ OK です。
+
+![ビルドからリソースを除外](../assets/build_resource.png)
+
+## LoRa モジュールからの応答が無い
+
+LoRa モジュールの設定ができない場合、M0、M1 ピンの設定を確認し、ちゃんと Configuration Mode に入っているかどうかを確認して下さい。
+
+LoRa モジュールの設定はできるが受信および送信の応答がない場合は、今度は Configuration Mode のままに入っている可能性があります。こちらも M0、M1 ピンの設定を確認し、正しいモードに入れているかを確認してください。
+
+また、LoRa モジュールと MCU との間の UART の Baudrate 設定が異なるとそれでも通信が行えなくなってしまいますので、最初に動作確認をする場合は MCU 側 UART の Baudrate 設定は 9,600bps にしておき、LoRa モジュールの設定でも 9,600bps (default 値) にすることを推奨します。これにより Baudrate の問題は起きません。
 
 [api-link]: https://men100.github.io/LoRabbit
 [lorabbit-link]: https://github.com/men100/LoRabbit/tree/main/src/LoRabbit
