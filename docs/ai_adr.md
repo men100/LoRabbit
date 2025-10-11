@@ -186,7 +186,7 @@ model = tf.keras.Sequential([
 model.fit(X_train, y_train, epochs=50, validation_split=0.2, verbose=1)
 ```
 
-- マイコンで高速に動作させるために、モデルを軽量な形式(.tflite)に変換します
+- マイコンで高速に動作させるために、モデルを軽量な形式(.tflite)に変換します (72-81行目)
   - 8bit量子化は、モデルのサイズを削減し、計算を軽くするための最適化です
 
 ```python
