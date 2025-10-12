@@ -41,7 +41,7 @@ LoRabbit(ローラビット)は、Renesas RAシリーズマイコンとμT-Kerne
   - 配線については下記の接続表を参考にしてください
 - 本リポジトリをクローンする
 - submodule もクローンする
-  - `git submmodule --init --recursive`
+  - `git submmodule update --init --recursive`
 - [EK-RA8D1向け送信サンプルプログラム][example-ra8d1_send-link]をe2_studioでインポートします
 - ビルドを実行
 - PC と EK-RA8D1 DEBUG1 を USB ケーブルで接続します
@@ -96,7 +96,7 @@ task 1
   - RMC-RA4M1 は IO レベル 5V、E220-900T22S(JP) 用評価ボードは IO レベル 3.3V のため、レベル変換が必要です。詳しくは [詳細セットアップガイド][setup-link] をご参照ください
 - 本リポジトリをクローンする
 - submodule もクローンする
-  - `git submmodule --init --recursive`
+  - `git submmodule update --init --recursive`
 - [RMC-RA4M1向け送信サンプルプログラム][example-ra4m1_send-link]をe2_studioでインポートします
 - ビルドを実行
 - PC と RMC-RA4M1 CN6 を USB ケーブルで接続します
@@ -144,6 +144,8 @@ task 1
 | GND          | GND |
 | +3.3V        | VCC |
 
+* 注: レベルシフタが必要です
+
 ## 他のボードの場合
 
 - [詳細セットアップガイド][setup-link] をご参照ください
@@ -153,8 +155,8 @@ task 1
 - [詳細セットアップガイド][setup-link]: LoRabbitを使うにあたってのFSP の詳細設定やライブラリの設定について解説しています
 - [LoRabbit ライブラリアーキテクチャ][architecture-link]: LoRabbit のライブラリアーキテクチャについて解説しています
 - [LoRabbit API 詳解][api-link]: LoRabbit API の詳細について解説しています
-- [サンプルプログラムについて][examples-link]: 各種サンプルプログラムについて解説しています
-- [サンプルアプリケーションについて][apps-link]: 各種サンプルアプリケーションについて解説しています
+- [サンプルプログラムについて][examples-link]: 単一機能のデモである、各種サンプルプログラムについて解説しています
+- [サンプルアプリケーションについて][apps-link]: 複数のボードやハードウェアを連携させた実践的な作例である、各種サンプルアプリケーションについて解説しています
 - [AI モデルの作り方][ai_adr-link]: ADR 用に用意した AI モデルの作り方について解説しています
 - [利用している OSS について][oss-link]: 本リポジトリで利用している OSS についての詳細情報を記述しています
 

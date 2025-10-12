@@ -204,9 +204,9 @@ converter.inference_output_type = tf.int8
 
 # 5. 変換
 
-Renesas 製 e-AI トランスレータを使うと、.tflite を RA マイコン向けの C 言語コードに変換してくれるので、利用するのも良い手段だと思います。
-
-変換されたコードは [lora_adr][lora_adr-link] にあります。
+Renesas 製 e-AI トランスレータを使うと、.tflite を RA マイコン向けの C 言語コードに変換してくれます。
+本ライブラリではここで生成されたC言語コードを `lora_adr` ディレクトリに配置し、利用しています。
+場所は [こちら][lora_adr-link] になります。
 
 e-AI トランスレータのダウンロード、マニュアルについては [マイクロコンピュータ向け e-AI開発環境 | Renesas ルネサス][e-ai-link] をご参照下さい。
 
