@@ -7,21 +7,21 @@
 LoRabbitライブラリおよびサンプルプログラム、サンプルアプリケーションで利用しています。
 
 - Git Repository: https://github.com/tron-forum/mtkernel_3/
-- Lisence: T-License2.2
+- License: T-License2.2
 
 # μT-Kernel 3.0 BSP2 (Board Support Package)
 
 LoRabbitライブラリおよびサンプルプログラム、サンプルアプリケーションで利用しています。
 
 - Git Repository: https://github.com/tron-forum/mtk3_bsp2
-- Lisence: T-License2.2
+- License: T-License2.2
 
 # heatshrink
 
 LoRabbitライブラリで利用しています。
 
 - Git Repository: https://github.com/atomicobject/heatshrink
-- Lisence: ISC Lisence
+- License: ISC License
 
 なお、LoRabbit 向けには以下に fork したものを用意し、修正しています。ビルドの際はこちらをご利用ください。
 
@@ -32,7 +32,7 @@ LoRabbitライブラリで利用しています。
 サンプルアプリケーションで利用しています。
 
 - Git Repository: https://github.com/ArduCAM/Arducam_Mega
-- Lisence: MIT Lisence
+- License: MIT License
 
 なお、LoRabbit 向けには以下に fork したものを用意し、修正しています。ビルドの際はこちらをご利用ください。
 
@@ -44,7 +44,7 @@ LoRabbitライブラリで利用しています。
 LoRabbitライブラリで利用しています。
 
 - Git Repository: なし
-- Lisence: Production OEM Lisence
+- License: Production OEM License
   - http://www.renesas.com/disclaimer
 
 [libcamera-link]: https://github.com/men100/Arducam_Mega/tree/53ed4a3707bda517caf5044dd4fad433ffea0cd4/examples/renesas/EK-RA6M4_arducam_mega/src/libcamera

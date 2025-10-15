@@ -160,9 +160,9 @@ task 1
 - [AI モデルの作り方][ai_adr-link]: ADR 用に用意した AI モデルの作り方について解説しています
 - [利用している OSS について][oss-link]: 本リポジトリで利用している OSS についての詳細情報を記述しています
 
-# Lisence
+# License
 
-- このライブラリのライセンスは Apache Lisence 2.0 です。
+- このライブラリのライセンスは Apache License 2.0 です。
 
 [example-ra8d1_send-link]: https://github.com/men100/LoRabbit/tree/main/examples/ra8d1_send
 [example-ra4m1_send-link]: https://github.com/men100/LoRabbit/tree/main/examples/ra4m1_send
